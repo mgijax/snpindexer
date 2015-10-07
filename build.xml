@@ -1,5 +1,9 @@
 <project name="snpindxer" default="jar" basedir=".">
 	
+	<!-- To get maven to download the deps run the following command:
+		mvn dependency:copy-dependencies -DoutputDirectory=lib
+	-->
+	
 	<description>
 		feindexer build file
 	</description>
