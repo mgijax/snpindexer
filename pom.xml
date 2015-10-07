@@ -26,6 +26,16 @@
 			<artifactId>postgresql</artifactId>
 			<version>9.3-1101-jdbc4</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.solr.solr</groupId>
+			<artifactId>solr-solrj</artifactId>
+			<version>1.4.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.contrib</groupId>
+			<artifactId>junit-theories</artifactId>
+			<version>4.11</version>
+		</dependency>
 	</dependencies>
 
 	<build>

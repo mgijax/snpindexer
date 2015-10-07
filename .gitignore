@@ -1,3 +1,5 @@
 logs/
 bin/
 target/
+build/
+dist/
