@@ -21,7 +21,12 @@ public class SQLExecutor {
 	private Date start;
 	private Date end;
 
-	public SQLExecutor () {
+	private int	cursorSize = 0;
+	private boolean autoCommit = true;
+
+	public SQLExecutor(int cursorSize, boolean autoCommit) {
+		this.cursorSize  = cursorSize;
+		this.autoCommit = autoCommit;
 		try {
 
 			InputStream in = SQLExecutor.class.getClassLoader().getResourceAsStream("config.properties");
@@ -50,6 +55,7 @@ public class SQLExecutor {
 		try {
 			initializeConnection();
 			Statement stmt = con.createStatement();
+			stmt.setFetchSize(cursorSize);
 			start = new Date();
 			stmt.executeUpdate(query);
 			end = new Date();
@@ -64,6 +70,7 @@ public class SQLExecutor {
 		try {
 			initializeConnection();
 			Statement stmt = con.createStatement();
+			stmt.setFetchSize(cursorSize);
 			stmt.execute(query);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -76,6 +83,7 @@ public class SQLExecutor {
 		try {
 			initializeConnection();
 			Statement stmt = con.createStatement();
+			stmt.setFetchSize(cursorSize);
 			start = new Date();
 			set = stmt.executeQuery(query);
 			end = new Date();
@@ -90,6 +98,7 @@ public class SQLExecutor {
 	private void initializeConnection() throws SQLException {
 		if (con == null) {
 			con = DriverManager.getConnection(databaseUrl);
+			con.setAutoCommit(autoCommit);
 		}
 	}
 
