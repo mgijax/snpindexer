@@ -5,7 +5,7 @@
 	-->
 	
 	<description>
-		feindexer build file
+		snpindexer build file
 	</description>
 
 	<property name="src" location="src"/>
