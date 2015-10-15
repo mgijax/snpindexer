@@ -27,12 +27,10 @@ public abstract class Indexer {
 	public abstract void index();
 
 	public void addDocument(SolrInputDocument doc) throws SolrServerException, IOException {
-		setupServer();
 		client.add(doc);
 	}
 	
 	public void addDocuments(ArrayList<SolrInputDocument> docs) throws SolrServerException, IOException {
-		setupServer();
 		client.add(docs);
 	}
 	

@@ -1,0 +1,5 @@
+export SOLR_HOME=/Users/oblod/git/snpindexer/
+export SOLR_LOGS_DIR=/Users/oblod/git/snpindexer/logs
+export SOLR_INSTALL=/Users/oblod/Desktop/Solr/solr-5.3.1
+
+$SOLR_INSTALL/bin/solr start
