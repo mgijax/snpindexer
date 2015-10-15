@@ -1,10 +1,8 @@
 package org.jax.mgi.snpindexer.indexes;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
 
 public class SNPSearchIndexer extends Indexer {
@@ -36,10 +34,7 @@ public class SNPSearchIndexer extends Indexer {
 				
 				if(counter % 1000000 == 0) {
 					System.out.println("Counter: " + counter);
-					//System.gc();
-					//client.commit();
 				}
-				//System.gc();
 				counter++;
 				
 				SolrInputDocument doc = new SolrInputDocument();
@@ -55,8 +50,7 @@ public class SNPSearchIndexer extends Indexer {
 				
 			}
 			
-			client.commit();
-			client.close();
+			finish();
 
 			set.close();
 			
@@ -65,12 +59,6 @@ public class SNPSearchIndexer extends Indexer {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (SolrServerException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
+		}
 	}
 }

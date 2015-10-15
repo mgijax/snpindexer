@@ -38,8 +38,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-core</artifactId>
-			<version>5.0.2.Final</version>
+			<artifactId>hibernate-entitymanager</artifactId>
+			<version>4.3.3.Final</version>
 		</dependency>
 	</dependencies>
 

@@ -26,12 +26,39 @@ public abstract class Indexer {
 
 	public abstract void index();
 
-	public void addDocument(SolrInputDocument doc) throws SolrServerException, IOException {
-		client.add(doc);
+	public void addDocument(SolrInputDocument doc) {
+		try {
+			client.add(doc);
+		} catch (SolrServerException e) {
+			e.printStackTrace();
+			System.exit(1);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 	}
 	
-	public void addDocuments(ArrayList<SolrInputDocument> docs) throws SolrServerException, IOException {
-		client.add(docs);
+	public void addDocuments(ArrayList<SolrInputDocument> docs) {
+		try {
+			client.add(docs);
+		} catch (SolrServerException e) {
+			e.printStackTrace();
+			System.exit(1);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+	}
+	
+	public void finish() {
+		try {
+			client.commit();
+		} catch (SolrServerException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		client.close();
 	}
 	
 	public void resetIndex() {
