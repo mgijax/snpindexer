@@ -1,6 +1,5 @@
 package org.jax.mgi.snpindexer;
 
-import java.sql.SQLException;
 import java.util.HashMap;
 
 import org.jax.mgi.snpindexer.indexes.Indexer;
@@ -9,7 +8,7 @@ import org.jax.mgi.snpindexer.indexes.StrainIndexer;
 public class Main {
 	
 
-	public static void main(String[] args) throws SQLException {
+	public static void main(String[] args) {
 		
 		HashMap<String, Indexer> indexers = new HashMap<String, Indexer>();
 		
