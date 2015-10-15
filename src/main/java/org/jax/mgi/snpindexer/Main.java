@@ -3,7 +3,7 @@ package org.jax.mgi.snpindexer;
 import java.util.HashMap;
 
 import org.jax.mgi.snpindexer.indexes.Indexer;
-import org.jax.mgi.snpindexer.indexes.StrainIndexer;
+import org.jax.mgi.snpindexer.indexes.SNPSearchIndexer;
 
 public class Main {
 	
@@ -15,7 +15,7 @@ public class Main {
 		String solrUrl = "http://localhost.jax.org:8983/solr/";
 		
 
-		indexers.put("StrainIndex", new StrainIndexer(solrUrl, "StrainIndex"));
+		indexers.put("SNPSearchIndex", new SNPSearchIndexer(solrUrl, "SNPSearchIndex"));
 		
 
 		for(String name: indexers.keySet()) {

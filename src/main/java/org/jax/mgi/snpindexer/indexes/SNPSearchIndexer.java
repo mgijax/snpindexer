@@ -7,9 +7,9 @@ import java.sql.SQLException;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
 
-public class StrainIndexer extends Indexer {
+public class SNPSearchIndexer extends Indexer {
 
-	public StrainIndexer(String solrUrl, String coreName) {
+	public SNPSearchIndexer(String solrUrl, String coreName) {
 		super(solrUrl, coreName);
 	}
 
