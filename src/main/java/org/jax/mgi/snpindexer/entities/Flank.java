@@ -16,22 +16,24 @@ public class Flank extends SNPEntity implements Serializable {
 
 	@Id
 	@Column(name="_consensussnp_key")
-	private int id;
+	private int key;
 	
 	@Column(name="flank")
 	private String flank;
+	
 	@Id
 	@Column(name="sequencenum")
 	private int seqNum;
+	
 	@Id
 	@Column(name="is5prime")
 	private int is5Prime;
 
-	public int getId() {
-		return id;
+	public int getKey() {
+		return key;
 	}
-	public void setId(int id) {
-		this.id = id;
+	public void setKey(int key) {
+		this.key = key;
 	}
 	public String getFlank() {
 		return flank;

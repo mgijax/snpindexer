@@ -5,6 +5,8 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -18,32 +20,36 @@ public class Population extends SNPEntity implements Serializable {
 
 	@Id
 	@Column(name="_population_key")
-	private int id;
+	private int key;
+	
 	@Column(name="subhandle")
-	private String subHandle;
-	@Column(name="_subhandle_key")
-	private int subHandleId;
+	private String subHandleText;
+	
+	@ManyToOne
+	@JoinColumn(name="_subhandle_key", referencedColumnName="_term_key") 
+	private VOC_Term subHandle;
+	
 	@Column(name="name")
 	private String name;
 	
 	
-	public int getId() {
-		return id;
+	public int getKey() {
+		return key;
 	}
-	public void setId(int id) {
-		this.id = id;
+	public void setKey(int key) {
+		this.key = key;
 	}
-	public String getSubHandle() {
+	public String getSubHandleText() {
+		return subHandleText;
+	}
+	public void setSubHandleText(String subHandleText) {
+		this.subHandleText = subHandleText;
+	}
+	public VOC_Term getSubHandle() {
 		return subHandle;
 	}
-	public void setSubHandle(String subHandle) {
+	public void setSubHandle(VOC_Term subHandle) {
 		this.subHandle = subHandle;
-	}
-	public int getSubHandleId() {
-		return subHandleId;
-	}
-	public void setSubHandleId(int subHandleId) {
-		this.subHandleId = subHandleId;
 	}
 	public String getName() {
 		return name;

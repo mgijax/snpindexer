@@ -18,7 +18,7 @@ public class ConsensusSNPAllele extends SNPEntity implements Serializable {
 	
 	@Id
 	@Column(name="_consensussnp_key")
-	private int consensusId;
+	private int key;
 	
 	@Id
 	@ManyToOne
@@ -31,11 +31,11 @@ public class ConsensusSNPAllele extends SNPEntity implements Serializable {
 	@Column(name="isconflict")
 	private int isconflict;
 	
-	public int getConsensusId() {
-		return consensusId;
+	public int getKey() {
+		return key;
 	}
-	public void setConsensusId(int consensusId) {
-		this.consensusId = consensusId;
+	public void setKey(int key) {
+		this.key = key;
 	}
 	public Strain getStrain() {
 		return strain;

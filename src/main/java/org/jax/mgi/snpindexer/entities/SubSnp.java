@@ -2,11 +2,14 @@ package org.jax.mgi.snpindexer.entities;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -20,13 +23,10 @@ public class SubSnp extends SNPEntity implements Serializable {
 
 	@Id
 	@Column(name="_subsnp_key")
-	private int subSNPId;
+	private int key;
 	
 	@Column(name="_consensussnp_key")
-	private int consensusId;
-	
-	@Column(name="_subhandle_key")
-	private int subHandleId;
+	private int consensusKey;
 	
 	@ManyToOne
 	@JoinColumn(name="_varclass_key", referencedColumnName="_term_key") 
@@ -41,26 +41,27 @@ public class SubSnp extends SNPEntity implements Serializable {
 	@Column(name="allelesummary")
 	private String alleleSummary;
 	
-	@OneToMany(mappedBy="subSNPId")
+	@ManyToMany
+    @JoinTable(name="snp.snp_subsnp_strainallele",
+        joinColumns=@JoinColumn(name="_subsnp_key", referencedColumnName="_subsnp_key"),
+        inverseJoinColumns=@JoinColumn(name="_population_key", referencedColumnName="_population_key")
+        )
+	private Set<Population> populationList;
+	
+	@OneToMany(mappedBy="key")
 	private List<SubSNPStrainAllele> subSNPStrainAlleles;
 	
-	public int getSubSNPId() {
-		return subSNPId;
+	public int getKey() {
+		return key;
 	}
-	public void setSubSNPId(int subSNPId) {
-		this.subSNPId = subSNPId;
+	public void setKey(int key) {
+		this.key = key;
 	}
-	public int getConsensusId() {
-		return consensusId;
+	public int getConsensusKey() {
+		return consensusKey;
 	}
-	public void setConsensusId(int consensusId) {
-		this.consensusId = consensusId;
-	}
-	public int getSubHandleId() {
-		return subHandleId;
-	}
-	public void setSubHandleId(int subHandleId) {
-		this.subHandleId = subHandleId;
+	public void setConsensusKey(int consensusKey) {
+		this.consensusKey = consensusKey;
 	}
 	public VOC_Term getVocTerm() {
 		return vocTerm;
@@ -86,6 +87,12 @@ public class SubSnp extends SNPEntity implements Serializable {
 	public void setAlleleSummary(String alleleSummary) {
 		this.alleleSummary = alleleSummary;
 	}
+	public Set<Population> getPopulationList() {
+		return populationList;
+	}
+	public void setPopulationList(Set<Population> populationList) {
+		this.populationList = populationList;
+	}
 	public List<SubSNPStrainAllele> getSubSNPStrainAlleles() {
 		return subSNPStrainAlleles;
 	}
@@ -93,6 +100,11 @@ public class SubSnp extends SNPEntity implements Serializable {
 		this.subSNPStrainAlleles = subSNPStrainAlleles;
 	}
 
+	@Transient
+	public Population getPopulation() {
+		return (Population)populationList.toArray()[0];
+	}
+	
 	@Override
 	@Transient
 	public void Accept(VisitorInterface pi) {

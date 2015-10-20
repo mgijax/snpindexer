@@ -1,5 +1,7 @@
 package org.jax.mgi.snpindexer.entities;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -9,36 +11,36 @@ import javax.persistence.Transient;
 import org.jax.mgi.snpindexer.visitors.VisitorInterface;
 
 @Entity
-@Table(name="mgd.voc_term")
-public class VOC_Term extends SNPEntity {
+@Table(name="mgd.mrk_marker")
+public class Marker extends SNPEntity implements Serializable {
 
 	@Id
-	@Column(name="_term_key")
+	@Column(name="_marker_key")
 	private int key;
 	
-	@Column(name="term")
-	private String term;
+	@Column(name="symbol")
+	private String symbol;
 	
-	@Column(name="abbreviation")
-	private String abbreviation;
-
+	@Column(name="name")
+	private String name;
+	
 	public int getKey() {
 		return key;
 	}
 	public void setKey(int key) {
 		this.key = key;
 	}
-	public String getTerm() {
-		return term;
+	public String getSymbol() {
+		return symbol;
 	}
-	public void setTerm(String term) {
-		this.term = term;
+	public void setSymbol(String symbol) {
+		this.symbol = symbol;
 	}
-	public String getAbbreviation() {
-		return abbreviation;
+	public String getName() {
+		return name;
 	}
-	public void setAbbreviation(String abbreviation) {
-		this.abbreviation = abbreviation;
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	@Override
@@ -46,5 +48,4 @@ public class VOC_Term extends SNPEntity {
 	public void Accept(VisitorInterface pi) {
 		pi.Visit(this);
 	}
-
 }

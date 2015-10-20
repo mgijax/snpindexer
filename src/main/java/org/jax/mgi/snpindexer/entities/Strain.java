@@ -16,10 +16,10 @@ public class Strain extends SNPEntity implements Serializable {
 
 	@Id
 	@Column(name="_snpstrain_key")
-	private int strainId;
+	private int key;
 	
 	@Column(name="_mgdstrain_key")
-	private int mgdStrainId;
+	private int mgdStrainKey;
 	
 	@Column(name="strain")
 	private String strain;
@@ -27,17 +27,17 @@ public class Strain extends SNPEntity implements Serializable {
 	@Column(name="sequencenum")
 	private int seqNum;
 
-	public int getStrainId() {
-		return strainId;
+	public int getKey() {
+		return key;
 	}
-	public void setStrainId(int strainId) {
-		this.strainId = strainId;
+	public void setKey(int key) {
+		this.key = key;
 	}
-	public int getMgdStrainId() {
-		return mgdStrainId;
+	public int getMgdStrainKey() {
+		return mgdStrainKey;
 	}
-	public void setMgdStrainId(int mgdStrainId) {
-		this.mgdStrainId = mgdStrainId;
+	public void setMgdStrainKey(int mgdStrainKey) {
+		this.mgdStrainKey = mgdStrainKey;
 	}
 	public String getStrain() {
 		return strain;

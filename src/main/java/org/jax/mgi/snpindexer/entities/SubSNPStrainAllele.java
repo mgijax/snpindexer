@@ -18,12 +18,7 @@ public class SubSNPStrainAllele extends SNPEntity implements Serializable {
 
 	@Id
 	@Column(name="_subsnp_key")
-	private int subSNPId;
-	
-	@Id
-	@ManyToOne
-	@JoinColumn(name="_population_key", referencedColumnName="_population_key") 
-	private Population population;
+	private int key;
 	
 	@Id
 	@ManyToOne
@@ -33,18 +28,11 @@ public class SubSNPStrainAllele extends SNPEntity implements Serializable {
 	@Column(name="allele")
 	private String allele;
 	
-	
-	public int getSubSNPId() {
-		return subSNPId;
+	public int getKey() {
+		return key;
 	}
-	public void setSubSNPId(int subSNPId) {
-		this.subSNPId = subSNPId;
-	}
-	public Population getPopulation() {
-		return population;
-	}
-	public void setPopulation(Population population) {
-		this.population = population;
+	public void setKey(int key) {
+		this.key = key;
 	}
 	public Strain getStrain() {
 		return strain;

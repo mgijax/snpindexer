@@ -4,12 +4,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.jax.mgi.snpindexer.entities.Consensus;
-import org.jax.mgi.snpindexer.util.ConsensusSNPDAO;
+import org.jax.mgi.snpindexer.util.ConsensusDAO;
 import org.jax.mgi.snpindexer.visitors.PrintVisitor;
 
 public class ConsensusSNPIndexer extends Indexer {
 
-	private ConsensusSNPDAO dao = new ConsensusSNPDAO();
+	private ConsensusDAO dao = new ConsensusDAO();
 	
 	public ConsensusSNPIndexer(String solrUrl, String coreName) {
 		super(solrUrl, coreName);
@@ -22,7 +22,7 @@ public class ConsensusSNPIndexer extends Indexer {
 			
 			
 		
-			ResultSet set = sql.executeQuery("select _consensussnp_key from snp.snp_consensussnp limit 10");
+			ResultSet set = sql.executeQuery("select _accession_key from snp.snp_accession where _logicaldb_key = 73 and _mgitype_key = 30 and accid = 'rs3163500'");
 			
 			int counter = 0;
 			while (set.next()) {
@@ -31,7 +31,9 @@ public class ConsensusSNPIndexer extends Indexer {
 				}
 				counter++;
 				
-				Consensus snp = dao.getConsensusSNP(set.getInt("_consensussnp_key"));
+				Consensus snp = dao.getConsensus(set.getInt("_accession_key"));
+				
+				snp.getConsensusSNP().setSubSnpAccessions(dao.getSubSnpAccessions(snp.getConsensusSNP().getKey()));
 				
 				PrintVisitor p = new PrintVisitor();
 				snp.Accept(p);
@@ -47,9 +49,10 @@ public class ConsensusSNPIndexer extends Indexer {
 			sql.cleanup();
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.exit(1);
 		}
+		
 	}
 
 }

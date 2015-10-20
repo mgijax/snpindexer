@@ -1,15 +1,17 @@
 package org.jax.mgi.snpindexer.visitors;
 
-import java.io.PrintStream;
-
 import org.jax.mgi.snpindexer.entities.Consensus;
+import org.jax.mgi.snpindexer.entities.ConsensusMarker;
+import org.jax.mgi.snpindexer.entities.ConsensusSNP;
 import org.jax.mgi.snpindexer.entities.ConsensusSNPAllele;
 import org.jax.mgi.snpindexer.entities.CoordCache;
 import org.jax.mgi.snpindexer.entities.Flank;
+import org.jax.mgi.snpindexer.entities.Marker;
 import org.jax.mgi.snpindexer.entities.Population;
 import org.jax.mgi.snpindexer.entities.Strain;
 import org.jax.mgi.snpindexer.entities.SubSNPStrainAllele;
 import org.jax.mgi.snpindexer.entities.SubSnp;
+import org.jax.mgi.snpindexer.entities.SubSnpAccession;
 import org.jax.mgi.snpindexer.entities.VOC_Term;
 
 public class PrintVisitor extends PrinterUtil implements VisitorInterface {
@@ -17,31 +19,75 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 	@Override
 	public void Visit(Consensus consensus) {
 		printi("Consensus: {");
-		consensus.getVocTerm().Accept(this);
-		printiu("Id: " + consensus.getId());
-		printiu("AlleleSummary: " + consensus.getAlleleSummary());
-		printiu("Iupaccode: " + consensus.getIupaccode());
-		printiu("BuildCreated: " + consensus.getBuildCreated());
-		printiu("BuildUpdated: " + consensus.getBuildUpdated());
+		printiu("Key: " + consensus.getKey());
+		printiu("Accid: " + consensus.getAccid());
+		consensus.getConsensusSNP().Accept(this);
+		printu("}");
+	}
+
+	@Override
+	public void Visit(SubSnpAccession subSnpAccession) {
+		printi("SubSnpAccession: {");
+		printiu("Key: " + subSnpAccession.getKey());
+		printiu("Accid: " + subSnpAccession.getAccid());
+		printiu("LogicalDBKey: " + subSnpAccession.getLogicalDBKey());
+		printiu("MgiTypeKey: " + subSnpAccession.getMgiTypeKey());
+		subSnpAccession.getSubSnp().Accept(this);
+		printu("}");
+	}
+
+	@Override
+	public void Visit(ConsensusMarker consensusMarker) {
+		printi("ConsensusMarker: {");
+		if(consensusMarker.getContigAllele() != null) {
+			printiu("ContigAllele: " + consensusMarker.getContigAllele());
+		}
+		if(consensusMarker.getResidue() != null) {
+			printiu("Residue: " + consensusMarker.getResidue());
+		}
+		if(consensusMarker.getAaPosition() != null) {
+			printiu("AaPosition: " + consensusMarker.getAaPosition());
+		}
+		if(consensusMarker.getReadingFrame() != null) {
+			printiu("ReadingFrame: " + consensusMarker.getReadingFrame());
+		}
+		printi("Function Class: {");
+		consensusMarker.getVocTerm().Accept(this);
+		printu("}");
+		consensusMarker.getMarker().Accept(this);
+		printu("}");
+	}
+	
+	@Override
+	public void Visit(ConsensusSNP consensusSNP) {
+		printi("ConsensusSNP: {");
+		printi("Variation Class: {");
+		consensusSNP.getVocTerm().Accept(this);
+		printu("}");
+		printiu("Key: " + consensusSNP.getKey());
+		printiu("AlleleSummary: " + consensusSNP.getAlleleSummary());
+		printiu("Iupaccode: " + consensusSNP.getIupaccode());
+		printiu("BuildCreated: " + consensusSNP.getBuildCreated());
+		printiu("BuildUpdated: " + consensusSNP.getBuildUpdated());
 		printi("Flanks: [");
-		for(Flank f: consensus.getFlanks()) {
+		for(Flank f: consensusSNP.getFlanks()) {
 			f.Accept(this);
 		}
 		printu("]");
 		printi("CoordCaches: [");
-		for(CoordCache c: consensus.getCoordCaches()) {
+		for(CoordCache c: consensusSNP.getCoordCaches()) {
 			c.Accept(this);
 		}
 		printu("]");
 		
-		printi("SubSNPs: [");
-		for(SubSnp s: consensus.getSubSNPs()) {
+		printi("SubSnpAccessions: [");
+		for(SubSnpAccession s: consensusSNP.getSubSnpAccessions()) {
 			s.Accept(this);
 		}
 		printu("]");
 		
 		printi("ConsensusSNPAlleles: [");
-		for(ConsensusSNPAllele c: consensus.getConsensusSNPAlleles()) {
+		for(ConsensusSNPAllele c: consensusSNP.getConsensusSNPAlleles()) {
 			c.Accept(this);
 		}
 		printu("]");
@@ -56,24 +102,34 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 		
 		printiu("Chromosome: " + coordCache.getChromosome());
 		printiu("seqNum: " + coordCache.getSeqNum());
-		printiu("Startcoordinate: " + coordCache.getStartcoordinate());
+		printiu("Startcoordinate: " + (int)coordCache.getStartcoordinate());
 		printiu("IsMultiCoord: " + coordCache.getIsMultiCoord());
 		printiu("Strand: " + coordCache.getStrand());
 		coordCache.getVocTerm().Accept(this);
 		printiu("AlleleSummary: " + coordCache.getAlleleSummary());
 		printiu("Iupaccode: " + coordCache.getIupaccode());
-		
+		printi("Consensus Markers [");
+		for(ConsensusMarker cm: coordCache.getConsensusMarker()) {
+			cm.Accept(this);
+		}
+		printu("]");
 		printu("}");
 	}
 	
 	@Override
 	public void Visit(SubSnp subSnp) {
 		printi("SubSNP: {");
-		printiu("SubHandleId: " + subSnp.getSubHandleId());
+		printiu("Key: " + subSnp.getKey());
+		printiu("ConsensusKey: " + subSnp.getConsensusKey());
+		printi("Variation Class: {");
 		subSnp.getVocTerm().Accept(this);
+		printu("}");
 		printiu("Orientation: " + subSnp.getOrientation());
 		printiu("Isexemplar: " + subSnp.getIsexemplar());
 		printiu("AlleleSummary: " + subSnp.getAlleleSummary());
+
+		subSnp.getPopulation().Accept(this);
+		
 		printi("SubSNPAlleles: [");
 		for(SubSNPStrainAllele s: subSnp.getSubSNPStrainAlleles()) {
 			s.Accept(this);
@@ -87,7 +143,6 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 	public void Visit(SubSNPStrainAllele subSNPStrainAllele) {
 		printi("SubSNPAllele: {");
 		printiu("Allele: " + subSNPStrainAllele.getAllele());
-		subSNPStrainAllele.getPopulation().Accept(this);
 		subSNPStrainAllele.getStrain().Accept(this);
 		printu("}");
 	}
@@ -103,22 +158,50 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 
 	@Override
 	public void Visit(Population population) {
-		printiu("Population: { Id: " + population.getId() + " subhandle: " + population.getSubHandle() + " name: " + population.getName() + "}");
+		printi("Population: {");
+		//printiu("Key: " + population.getKey());
+		printiu("Subhandle Text: " + population.getSubHandleText());
+		printi("Subhandle: {");
+		population.getSubHandle().Accept(this);
+		printu("}");
+		printiu("Name: " + population.getName());
+		printu("}");
 	}
 
 	@Override
 	public void Visit(Strain strain) {
-		printiu("Strain: { Id: " + strain.getStrainId() + " strain: " + strain.getStrain() + " seqNum: " + strain.getSeqNum() + "}");
+		printi("Strain: {");
+		//printiu("Key: " + strain.getKey());
+		printiu("Strain: " + strain.getStrain());
+		printiu("SeqNum: " + strain.getSeqNum());
+		printu("}");
 	}
 
 	@Override
 	public void Visit(VOC_Term voc_Term) {
-		printiu("VocTerm: { Id: " + voc_Term.getId() + " term: " + voc_Term.getTerm() + " ab: " + voc_Term.getAbbreviation() + "}");
+		printi("VocTerm: {");
+		//printiu("Key: " + voc_Term.getKey());
+		printiu("Term: " + voc_Term.getTerm());
+		if(voc_Term.getAbbreviation() != null) {
+			printiu("Ab: " + voc_Term.getAbbreviation());
+		}
+		printu("}");
 	}
 
 	@Override
 	public void Visit(Flank flank) {
-		printiu("Flank: { Id: " + flank.getId() + " flank: " + flank.getFlank() + " Seq: " + flank.getSeqNum() + " is5Prime: " + flank.getIs5Prime() + "}");
+		printiu("Flank: { Id: " + flank.getKey() + " flank: " + flank.getFlank() + " Seq: " + flank.getSeqNum() + " is5Prime: " + flank.getIs5Prime() + "}");
 	}
+
+
+	@Override
+	public void Visit(Marker marker) {
+		printi("Marker: {");
+		printiu("Key: " + marker.getKey());
+		printiu("Symbol: " + marker.getSymbol());
+		printiu("Name: " + marker.getName());
+		printu("}");
+	}
+
 
 }

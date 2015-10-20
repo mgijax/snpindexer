@@ -1,12 +1,14 @@
 package org.jax.mgi.snpindexer.entities;
 
 import java.io.Serializable;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -18,10 +20,10 @@ public class CoordCache extends SNPEntity implements Serializable {
 
 	@Id
 	@Column(name="_coord_cache_key")
-	private int id;
+	private int key;
 	
 	@Column(name="_consensussnp_key")
-	private int consensusId;
+	private int consensusKey;
 	
 	@Column(name="chromosome")
 	private String chromosome;
@@ -48,17 +50,20 @@ public class CoordCache extends SNPEntity implements Serializable {
 	@Column(name="iupaccode")
 	private String iupaccode;
 	
-	public int getId() {
-		return id;
+	@OneToMany(mappedBy="coordCacheKey")
+	private List<ConsensusMarker> consensusMarker;
+	
+	public int getKey() {
+		return key;
 	}
-	public void setId(int id) {
-		this.id = id;
+	public void setKey(int key) {
+		this.key = key;
 	}
-	public int getConsensusId() {
-		return consensusId;
+	public int getConsensusKey() {
+		return consensusKey;
 	}
-	public void setConsensusId(int consensusId) {
-		this.consensusId = consensusId;
+	public void setConsensusKey(int consensusKey) {
+		this.consensusKey = consensusKey;
 	}
 	public String getChromosome() {
 		return chromosome;
@@ -107,6 +112,12 @@ public class CoordCache extends SNPEntity implements Serializable {
 	}
 	public void setIupaccode(String iupaccode) {
 		this.iupaccode = iupaccode;
+	}
+	public List<ConsensusMarker> getConsensusMarker() {
+		return consensusMarker;
+	}
+	public void setConsensusMarker(List<ConsensusMarker> consensusMarker) {
+		this.consensusMarker = consensusMarker;
 	}
 
 	@Override
