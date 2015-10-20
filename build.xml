@@ -14,11 +14,11 @@
 	<property name="unittestoutput.dir" location="unittest-results" />
 	
 	<property environment="env"/>
-	<path id="class.path">
-		<fileset dir="lib">
-			<include name="**/*.jar" />
+
+	<path id="build.classpath">
+		<fileset dir="${basedir}/">
+			<include name="lib/*.jar"/>
 		</fileset>
-		<pathelement location="build" />
 	</path>
 
 	<target name="init">
@@ -33,13 +33,7 @@
 
 	<!-- compile -->
 	<target name="compile" depends="clean, init" >
-		<javac debug="on" srcdir="src" destdir="build">
-		<classpath>
-			<fileset dir="lib">
-				<include name="**/*.jar"/>
-			</fileset>
-		</classpath>
-		</javac>
+		<javac debug="on" srcdir="src" destdir="build" classpathref="build.classpath" />
 	</target>
 	
 	<target name="unittest" depends="compile">
@@ -47,7 +41,7 @@
 		<mkdir dir="${unittestoutput.dir}"/>
 		<junit fork="yes" forkmode="once" failureproperty="junit.failure" printsummary="yes" >
 			<classpath>
-				<path refid="class.path" />
+				<path refid="build.classpath" />
 			</classpath>
 			<formatter type="xml" usefile="true" />
 			<batchtest todir="${unittestoutput.dir}">
@@ -59,11 +53,11 @@
 	
 	<target name="jar" depends="unittest" description="Generates a jar.">
 		<jar jarfile="dist/snpindexer.jar" basedir="build" excludes="**/*Test.class">
-		<fileset dir="lib"/>
-		<manifest>
-			<attribute name="Class-Path" value="antlr-2.7.7.jar antlr-runtime-3.1.2.jar cal10n-api-0.7.4.jar commons-codec-1.3.jar commons-fileupload-1.2.1.jar commons-httpclient-3.1.jar commons-io-1.4.jar commons-io-2.4.jar commons-logging-1.0.4.jar commons-logging-1.1.3.jar dom4j-1.6.1.jar geronimo-stax-api_1.0_spec-1.0.1.jar hamcrest-core-1.3.jar hibernate-commons-annotations-4.0.4.Final.jar hibernate-core-4.3.3.Final.jar hibernate-entitymanager-4.3.3.Final.jar hibernate-jpa-2.1-api-1.0.0.Final.jar httpclient-4.4.1.jar httpcore-4.4.1.jar httpmime-4.4.1.jar jandex-1.1.0.Final.jar javaruntype-1.2.jar javassist-3.18.1-GA.jar jboss-logging-3.1.3.GA.jar jboss-logging-annotations-1.2.0.Beta1.jar jboss-transaction-api_1.2_spec-1.0.0.Final.jar junit-4.11.jar junit-theories-4.11.jar log4j-1.2.17.jar log4j-api-2.0-alpha2.jar log4j-core-2.0-alpha2.jar noggit-0.6.jar org.apache.logging.log4j-1.2.17.jar postgresql-9.3-1101-jdbc4.jar slf4j-api-1.7.7.jar slf4j-ext-1.6.4.jar slf4j-impl-2.0-alpha2.jar slf4j-simple-1.7.7.jar solr-solrj-5.3.0.jar stax2-api-3.1.4.jar stax-api-1.0.1.jar woodstox-core-asl-4.4.1.jar wstx-asl-3.2.7.jar xml-apis-1.0.b2.jar zookeeper-3.4.6.jar" />
-			<attribute name="Main-Class" value="org.jax.mgi.snpindexer.Main"/>
-		</manifest>
+			<zipgroupfileset dir="lib" />
+			<metainf dir="src/main/java/META-INF" includes="*.xml"/>
+			<manifest>
+				<attribute name="Main-Class" value="org.jax.mgi.snpindexer.Main" />
+			</manifest>
 		</jar>
 	</target>
 
