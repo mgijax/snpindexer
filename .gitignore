@@ -6,3 +6,4 @@ dist/
 .settings/
 solr/ConsensusSNPIndex/
 solr/SNPSearchIndex/
+config.properties
