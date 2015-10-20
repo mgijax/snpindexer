@@ -4,3 +4,5 @@ target/
 build/
 dist/
 .settings/
+solr/ConsensusSNPIndex/
+solr/SNPSearchIndex/

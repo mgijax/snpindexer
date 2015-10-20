@@ -109,13 +109,13 @@
      in a compatible way. Any analysis applied to the <uniqueKey> should _not_ produce multiple
      tokens
    -->   
-   <field name="_consensussnp_key" type="int" indexed="true" stored="true" multiValued="false" /> 
+   <field name="consensussnp_accid" type="string" indexed="true" stored="true" multiValued="false" /> 
    <field name="chromosome" type="string" indexed="true" stored="false" multiValued="false" /> 
    <field name="startcoordinate" type="double" indexed="true" stored="false" multiValued="false" /> 
    <field name="ismulticoord" type="boolean" indexed="true" stored="false" multiValued="false" /> 
-   <field name="_varclass_key" type="int" indexed="true" stored="false" multiValued="false" /> 
-   <field name="_fxn_key" type="int" indexed="true" stored="false" multiValued="false" /> 
-   <field name="_marker_key" type="int" indexed="true" stored="false" multiValued="false" /> 
+   <field name="varclass" type="string" indexed="true" stored="false" multiValued="false" /> 
+   <field name="fxn" type="string" indexed="true" stored="false" multiValued="false" /> 
+   <field name="marker_accid" type="string" indexed="true" stored="false" multiValued="false" /> 
    <field name="strain" type="string" indexed="true" stored="false" multiValued="false" /> 
 
    <!-- Dynamic field definitions allow using convention over configuration

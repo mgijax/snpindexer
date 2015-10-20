@@ -159,7 +159,7 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 	@Override
 	public void Visit(Population population) {
 		printi("Population: {");
-		//printiu("Key: " + population.getKey());
+		printiu("Key: " + population.getKey());
 		printiu("Subhandle Text: " + population.getSubHandleText());
 		printi("Subhandle: {");
 		population.getSubHandle().Accept(this);
