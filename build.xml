@@ -16,8 +16,8 @@
 	<property environment="env"/>
 
 	<path id="build.classpath">
-		<fileset dir="${basedir}/">
-			<include name="lib/*.jar"/>
+		<fileset dir="lib">
+			<include name="**/*.jar"/>
 		</fileset>
 	</path>
 
@@ -52,6 +52,8 @@
 	</target>
 	
 	<target name="jar" depends="unittest" description="Generates a jar.">
+		<copy file="log4j.properties" tofile="build/log4j.properties" overwrite="true" />
+		<copy file="config.properties" tofile="build/config.properties" overwrite="true" />
 		<jar jarfile="dist/snpindexer.jar" basedir="build" excludes="**/*Test.class">
 			<zipgroupfileset dir="lib" />
 			<metainf dir="src/main/java/META-INF" includes="*.xml"/>
