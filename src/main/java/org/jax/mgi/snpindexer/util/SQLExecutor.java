@@ -30,10 +30,17 @@ public class SQLExecutor {
 		try {
 
 			InputStream in = SQLExecutor.class.getClassLoader().getResourceAsStream("config.properties");
+			if(in == null) {
+				System.out.println("Could not load config.properties file please make sure its configured correctly");
+				System.exit(1);
+			}
 			try {
 				props.load(in);
-			} catch (IOException e1) {
-				e1.printStackTrace();
+			} catch (IOException e) {
+				System.out.println("Error: " + e.getMessage());
+				System.out.println("Could not load config.properties file please make sure its configured correctly");
+				System.exit(1);
+				//e1.printStackTrace();
 			}
 
 			Class.forName(props.getProperty("driver"));
@@ -66,7 +73,6 @@ public class SQLExecutor {
 	}
 
 	public void executeVoid(String query) {
-		
 		try {
 			initializeConnection();
 			Statement stmt = con.createStatement();
@@ -80,8 +86,8 @@ public class SQLExecutor {
 
 	public ResultSet executeQuery(String query) {
 		ResultSet set = null;
+		initializeConnection();
 		try {
-			initializeConnection();
 			Statement stmt = con.createStatement();
 			stmt.setFetchSize(cursorSize);
 			start = new Date();
@@ -89,16 +95,23 @@ public class SQLExecutor {
 			end = new Date();
 			return set;
 		} catch (Exception e) {
-			e.printStackTrace();
+			System.out.println("DB Error: " + e.getMessage());
 			System.exit(1);
 		}
 		return set;
 	}
 
-	private void initializeConnection() throws SQLException {
+	private void initializeConnection() {
 		if (con == null) {
-			con = DriverManager.getConnection(databaseUrl);
-			con.setAutoCommit(autoCommit);
+			try {
+				con = DriverManager.getConnection(databaseUrl);
+				con.setAutoCommit(autoCommit);
+				System.out.println("Database Connection Initialize to: " + databaseUrl);
+			} catch (SQLException e) {
+				System.out.println("Database Connection ERROR: " + e.getMessage());
+				System.out.println("DB Url: " + databaseUrl);
+				System.exit(1);
+			}
 		}
 	}
 

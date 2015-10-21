@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import org.jax.mgi.snpindexer.indexes.ConsensusSNPIndexer;
 import org.jax.mgi.snpindexer.indexes.Indexer;
+import org.jax.mgi.snpindexer.indexes.SNPSearchIndexer;
 
 public class Main {
 	
@@ -14,9 +15,10 @@ public class Main {
 		
 		String solrUrl = "http://localhost.jax.org:8983/solr/";
 
-		//indexers.put("SNPSearchIndex", new SNPSearchIndexer(solrUrl, "SNPSearchIndex"));
+		
 		try {
-			indexers.put("ConsensusSNPIndex", new ConsensusSNPIndexer(solrUrl, "ConsensusSNPIndex"));
+			//indexers.put("ConsensusSNPIndex", new ConsensusSNPIndexer(solrUrl, "ConsensusSNPIndex"));
+			indexers.put("SNPSearchIndex", new SNPSearchIndexer(solrUrl, "SNPSearchIndex"));
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
