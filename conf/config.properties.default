@@ -1,2 +1,5 @@
 driver=org.postgresql.Driver
-databaseUrl=jdbc:postgresql://localhost/export?user=mgd_dbo&password=db0dev
+databaseUrl=jdbc:postgresql://localhost/export
+user=mgd_public
+password=mgdpub
+solrBaseUrl=http://localhost.jax.org:8983/solr

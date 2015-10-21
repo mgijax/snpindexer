@@ -7,19 +7,19 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.ConcurrentUpdateSolrClient;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.common.SolrInputDocument;
+import org.jax.mgi.snpindexer.util.ConfigurationHelper;
 import org.jax.mgi.snpindexer.util.SQLExecutor;
 
-public abstract class Indexer {
+public abstract class Indexer extends Thread {
 
 	protected ConcurrentUpdateSolrClient client = null;
 	protected ConcurrentUpdateSolrClient adminClient = null;
 	
-	private String solrUrl = "";
 	private String coreName = "";
+	protected ConfigurationHelper config = new ConfigurationHelper();
 	protected SQLExecutor sql = new SQLExecutor(10000, false);
 
-	public Indexer(String solrUrl, String coreName) {
-		this.solrUrl = solrUrl;
+	public Indexer(String coreName) {
 		this.coreName = coreName;
 		setupServer();
 	}
@@ -47,6 +47,16 @@ public abstract class Indexer {
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
+		}
+	}
+	
+	public void commit() {
+		try {
+			client.commit();
+		} catch (SolrServerException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -79,7 +89,6 @@ public abstract class Indexer {
 			req.setSchemaName("schema.xml");
 			req.setIndexInfoNeeded(false);
 			req.process(adminClient);
-			//adminClient.commit();
 		} catch (Exception e) {
 			System.out.println("Unable to Load Core: " + coreName + " Reason: " + e.getMessage());
 		}
@@ -94,7 +103,6 @@ public abstract class Indexer {
 			req.setDeleteDataDir(true);
 			req.setDeleteInstanceDir(true);
 			req.process(adminClient);
-			//adminClient.commit();
 		} catch (Exception e) {
 			System.out.println("Unable to Delete Core: " + coreName + " Reason: " + e.getMessage());
 		}
@@ -102,11 +110,18 @@ public abstract class Indexer {
 
 	public void setupServer() {
 		if(client == null) {
-			client = new ConcurrentUpdateSolrClient(solrUrl + coreName, 100000, 2);
+			System.out.println("Setup Solr Client to use Solr Url: " + config.getSolrBaseUrl() + "/" + coreName);
+			client = new ConcurrentUpdateSolrClient(config.getSolrBaseUrl() + "/" + coreName, 100000, 2);
 		}
 		if(adminClient == null) {
-			adminClient = new ConcurrentUpdateSolrClient(solrUrl, 1, 1);
+			adminClient = new ConcurrentUpdateSolrClient(config.getSolrBaseUrl(), 1, 1);
 		}
+	}
+
+	@Override
+	public void run() {
+		super.run();
+		index();
 	}
 
 }

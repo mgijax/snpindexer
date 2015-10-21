@@ -13,41 +13,25 @@ import java.util.Properties;
 
 public class SQLExecutor {
 
-	public Properties props = new Properties();
-	
 	protected Connection con = null;
-	private String databaseUrl;
 
 	private Date start;
 	private Date end;
 
 	private int	cursorSize = 0;
 	private boolean autoCommit = true;
+	private ConfigurationHelper config = new ConfigurationHelper();
 
 	public SQLExecutor(int cursorSize, boolean autoCommit) {
 		this.cursorSize  = cursorSize;
 		this.autoCommit = autoCommit;
+		
 		try {
-
-			InputStream in = SQLExecutor.class.getClassLoader().getResourceAsStream("config.properties");
-			if(in == null) {
-				System.out.println("Could not load config.properties file please make sure its configured correctly");
-				System.exit(1);
-			}
-			try {
-				props.load(in);
-			} catch (IOException e) {
-				System.out.println("Error: " + e.getMessage());
-				System.out.println("Could not load config.properties file please make sure its configured correctly");
-				System.exit(1);
-				//e1.printStackTrace();
-			}
-
-			Class.forName(props.getProperty("driver"));
-			databaseUrl = props.getProperty("databaseUrl");
+			Class.forName(config.getDriver());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
+			System.exit(1);
 		}
 	}
 
@@ -104,12 +88,12 @@ public class SQLExecutor {
 	private void initializeConnection() {
 		if (con == null) {
 			try {
-				con = DriverManager.getConnection(databaseUrl);
+				con = DriverManager.getConnection(config.getDatabaseUrl(), config.getUser(), config.getPassword());
 				con.setAutoCommit(autoCommit);
-				System.out.println("Database Connection Initialize to: " + databaseUrl);
+				System.out.println("Database Connection Initialized to: " + config.getDatabaseUrl());
 			} catch (SQLException e) {
 				System.out.println("Database Connection ERROR: " + e.getMessage());
-				System.out.println("DB Url: " + databaseUrl);
+				System.out.println("DB Url: " + config.getDatabaseUrl());
 				System.exit(1);
 			}
 		}
@@ -121,7 +105,7 @@ public class SQLExecutor {
 
 	@Override
 	public String toString() {
-		return "SQLExecutor[databaseUrl=" + databaseUrl + "]";
+		return "SQLExecutor[databaseUrl=" + config.getDatabaseUrl() + "]";
 	}
 
 }

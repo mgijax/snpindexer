@@ -11,8 +11,8 @@ public class ConsensusSNPIndexer extends Indexer {
 
 	private ConsensusDAO dao = new ConsensusDAO();
 	
-	public ConsensusSNPIndexer(String solrUrl, String coreName) {
-		super(solrUrl, coreName);
+	public ConsensusSNPIndexer(String coreName) {
+		super(coreName);
 	}
 
 	@Override
