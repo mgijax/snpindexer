@@ -20,8 +20,6 @@ public class ConsensusSNPIndexer extends Indexer {
 		resetIndex();
 		try {
 			
-			
-		
 			ResultSet set = sql.executeQuery("select _accession_key from snp.snp_accession where _logicaldb_key = 73 and _mgitype_key = 30 and accid = 'rs3163500'");
 			
 			int counter = 0;
@@ -39,7 +37,6 @@ public class ConsensusSNPIndexer extends Indexer {
 				snp.Accept(p);
 				p.generateOutput(System.out);
 				
-
 			}
 			
 			finish();

@@ -9,6 +9,10 @@ import org.jax.mgi.snpindexer.entities.SubSnpAccession;
 
 public class ConsensusDAO extends SQLDAO {
 
+	public ConsensusDAO() {
+		super();
+	}
+
 	public Consensus getConsensus(int id) {
 		return em.find(Consensus.class, id);
 	}

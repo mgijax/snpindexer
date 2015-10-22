@@ -58,7 +58,7 @@ public class ConfigurationHelper {
 		
 	}
 	
-	private void printProperties() {
+	public static void printProperties() {
 		System.out.println("Effective Properties:");
 		System.out.println("\tdriver: " + driver);
 		System.out.println("\tdatabaseUrl: " + databaseUrl);
