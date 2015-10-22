@@ -5,5 +5,5 @@ build/
 dist/
 .settings/
 solr/ConsensusSNPIndex/
-solr/SNPSearchIndex/
+solr/SearchSNPIndex/
 config.properties
