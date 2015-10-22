@@ -2,10 +2,7 @@
 <persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
 	<persistence-unit name="SNP-Indexer">
 		<properties>
-         <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver" />
-         <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost/export" />
-         <property name="javax.persistence.jdbc.user" value="postgres" />
-         <property name="javax.persistence.jdbc.password" value="getmeon" />
+		<!-- This file gets its connection parameters from the ConfigurationHandler class in java -->
          <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
          <property name="hibernate.readOnly" value="true" />
          <property name="hibernate.show_sql" value="true" />
