@@ -70,11 +70,12 @@ If one decides to the run the jar file by itself it can be running the following
   2. Running with -D java parameters: 
 	
 		host:/path/to/snpindexer => cd dist
-		host:/path/to/snpindexer => java -jar snpindexer.jar \
+		host:/path/to/snpindexer => java \
 			-DPG_DBURL=jdbc:postgresql://mgi-testdb3.jax.org/export \
 			-DPG_DBUSER=mgd_other \
 			-DPG_DBPASS=pasword \
-			-DSOLR_BASEURL=http://snpsolr.jax.org:8983/solr
+			-DSOLR_BASEURL=http://snpsolr.jax.org:8983/solr \
+			-jar snpindexer.jar
 			
   3. Running with ENV vars set:
 		

@@ -16,7 +16,7 @@ public abstract class Indexer extends Thread {
 	protected ConcurrentUpdateSolrClient adminClient = null;
 	
 	private String coreName = "";
-	protected ConfigurationHelper config = new ConfigurationHelper();
+	protected static ConfigurationHelper config; // This is a static class so the constructor gets run automatically
 	protected SQLExecutor sql = new SQLExecutor(10000, false);
 
 	public Indexer(String coreName) {

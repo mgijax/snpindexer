@@ -6,11 +6,11 @@ import java.util.Properties;
 
 public class ConfigurationHelper {
 	
-	private String driver = null;
-	private String databaseUrl = null;
-	private String user = null;
-	private String password = null;
-	private String solrBaseUrl = null;
+	private static String driver = null;
+	private static String databaseUrl = null;
+	private static String user = null;
+	private static String password = null;
+	private static String solrBaseUrl = null;
 	
 	public ConfigurationHelper() {
 		
@@ -59,44 +59,27 @@ public class ConfigurationHelper {
 	}
 	
 	private void printProperties() {
-		System.out.println("Active Properties:");
+		System.out.println("Effective Properties:");
 		System.out.println("\tdriver: " + driver);
 		System.out.println("\tdatabaseUrl: " + databaseUrl);
 		System.out.println("\tuser: " + user);
 		System.out.println("\tpassword: " + password);
 		System.out.println("\tsolrBaseUrl: " + solrBaseUrl);
-		
 	}
 
-	public String getDriver() {
+	public static String getDriver() {
 		return driver;
 	}
-	public void setDriver(String driver) {
-		this.driver = driver;
-	}
-	public String getDatabaseUrl() {
+	public static String getDatabaseUrl() {
 		return databaseUrl;
 	}
-	public void setDatabaseUrl(String databaseUrl) {
-		this.databaseUrl = databaseUrl;
-	}
-	public String getUser() {
+	public static String getUser() {
 		return user;
 	}
-	public void setUser(String user) {
-		this.user = user;
-	}
-	public String getPassword() {
+	public static String getPassword() {
 		return password;
 	}
-	public void setPassword(String password) {
-		this.password = password;
-	}
-	public String getSolrBaseUrl() {
+	public static String getSolrBaseUrl() {
 		return solrBaseUrl;
 	}
-	public void setSolrBaseUrl(String solrBaseUrl) {
-		this.solrBaseUrl = solrBaseUrl;
-	}
-	
 }
