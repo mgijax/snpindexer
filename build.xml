@@ -21,6 +21,13 @@
 		</fileset>
 	</path>
 
+	<target name="dependencies">
+		<exec executable="mvn">
+			<arg value="dependency:copy-dependencies"/>
+			<arg value="-DoutputDirectory=lib"/>
+	  </exec>
+	</target>
+
 	<target name="init">
 		<mkdir dir="build"/>
 		<mkdir dir="dist"/>
