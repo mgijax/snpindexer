@@ -41,6 +41,11 @@
 			<artifactId>hibernate-entitymanager</artifactId>
 			<version>4.3.3.Final</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.2.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>
