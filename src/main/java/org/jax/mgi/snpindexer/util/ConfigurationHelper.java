@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 public class ConfigurationHelper {
 	
@@ -13,10 +15,18 @@ public class ConfigurationHelper {
 	private static String user = null;
 	private static String password = null;
 	private static String solrBaseUrl = null;
-	private static Logger log = Logger.getLogger(ConfigurationHelper.class);
+	private static Logger log;
 	
 	public static void init() {
+		InputStream in = ConfigurationHelper.class.getClassLoader().getResourceAsStream("log4j.properties");
+		if(in == null) {
+			System.out.println("No log4j.properties file. Output going to stdout this is most likely not what you want");
+			BasicConfigurator.configure();
+		} else {
+			PropertyConfigurator.configure(in);
+		}
 		
+		log = Logger.getLogger(ConfigurationHelper.class);
 		log.info("Loading System Properties via -D paramaters");
 		driver = System.getProperty("PG_DBDRIVER");
 		databaseUrl = System.getProperty("PG_DBURL");
@@ -25,7 +35,7 @@ public class ConfigurationHelper {
 		solrBaseUrl = System.getProperty("SOLR_BASEURL");
 		
 		log.info("Loading Properties via config.properties files");
-		InputStream in = SQLExecutor.class.getClassLoader().getResourceAsStream("config.properties");
+		in = SQLExecutor.class.getClassLoader().getResourceAsStream("config.properties");
 		if(in == null) {
 			log.info("No config.properties assuming defaults");
 		} else {

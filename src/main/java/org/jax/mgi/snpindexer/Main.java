@@ -9,14 +9,14 @@ import org.jax.mgi.snpindexer.indexes.ConsensusSNPIndexer;
 import org.jax.mgi.snpindexer.indexes.Indexer;
 import org.jax.mgi.snpindexer.indexes.SearchSNPIndexer;
 import org.jax.mgi.snpindexer.util.ConfigurationHelper;
+import org.jax.mgi.snpindexer.util.SQLExecutor;
 
 public class Main {
 	
 	public static void main(String[] args) {
-		PropertyConfigurator.configure("log4j.properties");
 		ConfigurationHelper.init();
 		
-	
+
 		Logger log = Logger.getLogger(Main.class);
 		
 		HashMap<String, Indexer> indexers = new HashMap<String, Indexer>();
