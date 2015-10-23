@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.ConcurrentUpdateSolrClient;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
@@ -18,7 +20,7 @@ public abstract class Indexer extends Thread {
 	
 	protected static ConfigurationHelper config; // This is a static class so the constructor gets run automatically
 	protected SQLExecutor sql = new SQLExecutor(10000, false);
-	
+	protected Logger log = Logger.getLogger(getClass());
 	
 	private String coreName = "";
 	private Date startTime;
@@ -26,6 +28,7 @@ public abstract class Indexer extends Thread {
 	public Indexer(String coreName) {
 		this.coreName = coreName;
 		setupServer();
+
 	}
 
 	public abstract void index();
@@ -58,7 +61,23 @@ public abstract class Indexer extends Thread {
 		try {
 			client.commit();
 		} catch (SolrServerException e) {
-			e.printStackTrace();
+			int trys = 5;
+			while(trys-- > 0) {
+				try {
+					Thread.sleep(5000);
+					client.commit();
+				} catch (SolrServerException e1) {
+					log.warn("Problem with Commit: " + ExceptionUtils.getRootCause(e1.getCause()));
+					log.warn("Retrying Commit: ");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+			log.error("Could not commit batch to solr exiting");
+			System.exit(1);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -66,14 +85,9 @@ public abstract class Indexer extends Thread {
 	
 	public void finish() {
 		progress(100, 100);
-		try {
-			client.commit();
-		} catch (SolrServerException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		commit();
 		client.close();
+		log.info("Indexer Finished");
 	}
 	
 	public void resetIndex() {
@@ -89,13 +103,13 @@ public abstract class Indexer extends Thread {
 		if(percent > 0) {
 			int perms = (int)(diff / percent);
 			Date end = new Date(startTime.getTime() + perms);
-			System.out.println("Percentage complete: " + (int)(percent * 100) + "% Estimated Finish: " + end);
+			log.info("Percentage complete: " + (int)(percent * 100) + "% Estimated Finish: " + end);
 		}
 	}
 	
 	private void createIndex() {
 		try {
-			System.out.println("Creating Core: " + coreName);
+			log.info("Creating Core: " + coreName);
 			CoreAdminRequest.Create req = new CoreAdminRequest.Create();
 			req.setCoreName(coreName);
 			req.setInstanceDir(coreName);
@@ -107,13 +121,13 @@ public abstract class Indexer extends Thread {
 			req.setIndexInfoNeeded(false);
 			req.process(adminClient);
 		} catch (Exception e) {
-			System.out.println("Unable to Load Core: " + coreName + " Reason: " + e.getMessage());
+			log.info("Unable to Load Core: " + coreName + " Reason: " + e.getMessage());
 		}
 	}
 	
 	private void deleteIndex() {
 		try {
-			System.out.println("Deleting Core: " + coreName);
+			log.info("Deleting Core: " + coreName);
 			CoreAdminRequest.Unload req = new CoreAdminRequest.Unload(true);
 			req.setCoreName(coreName);
 			req.setDeleteIndex(true);
@@ -121,13 +135,13 @@ public abstract class Indexer extends Thread {
 			req.setDeleteInstanceDir(true);
 			req.process(adminClient);
 		} catch (Exception e) {
-			System.out.println("Unable to Delete Core: " + coreName + " Reason: " + e.getMessage());
+			log.info("Unable to Delete Core: " + coreName + " Reason: " + e.getMessage());
 		}
 	}
 
 	public void setupServer() {
 		if(client == null) {
-			System.out.println("Setup Solr Client to use Solr Url: " + config.getSolrBaseUrl() + "/" + coreName);
+			log.info("Setup Solr Client to use Solr Url: " + config.getSolrBaseUrl() + "/" + coreName);
 			client = new ConcurrentUpdateSolrClient(config.getSolrBaseUrl() + "/" + coreName, 100000, 2);
 		}
 		if(adminClient == null) {

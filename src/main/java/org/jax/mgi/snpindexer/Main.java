@@ -3,22 +3,29 @@ package org.jax.mgi.snpindexer;
 import java.util.Date;
 import java.util.HashMap;
 
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.jax.mgi.snpindexer.indexes.ConsensusSNPIndexer;
 import org.jax.mgi.snpindexer.indexes.Indexer;
 import org.jax.mgi.snpindexer.indexes.SearchSNPIndexer;
+import org.jax.mgi.snpindexer.util.ConfigurationHelper;
 
 public class Main {
 	
-
 	public static void main(String[] args) {
+		PropertyConfigurator.configure("log4j.properties");
+		ConfigurationHelper.init();
+		
+	
+		Logger log = Logger.getLogger(Main.class);
 		
 		HashMap<String, Indexer> indexers = new HashMap<String, Indexer>();
 
 		boolean threaded = false;
-		System.out.println("Start Time: " + new Date());
+		log.info("Start Time: " + new Date());
 		
 		try {
-			indexers.put("ConsensusSNPIndex", new ConsensusSNPIndexer("ConsensusSNPIndex"));
+			//indexers.put("ConsensusSNPIndex", new ConsensusSNPIndexer("ConsensusSNPIndex"));
 			indexers.put("SearchSNPIndex", new SearchSNPIndexer("SearchSNPIndex"));
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -26,7 +33,7 @@ public class Main {
 		}
 		
 		for(String name: indexers.keySet()) {
-			System.out.println("Starting Index for: " + name);
+			log.info("Starting Index for: " + name);
 			if(threaded) {
 				indexers.get(name).start();
 			} else {
@@ -43,7 +50,7 @@ public class Main {
 			}
 		}
 		
-		System.out.println("End Time: " + new Date());
+		log.info("End Time: " + new Date());
 		System.exit(0);
 	}
 

@@ -2,7 +2,7 @@ package org.jax.mgi.snpindexer.visitors;
 
 import java.io.PrintStream;
 
-import org.slf4j.Logger;
+import org.apache.log4j.Logger;
 
 public class PrinterUtil {
 

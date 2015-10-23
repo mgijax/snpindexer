@@ -5,7 +5,7 @@
 		<!-- This file gets its connection parameters from the ConfigurationHandler class in java -->
          <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
          <property name="hibernate.readOnly" value="true" />
-         <property name="hibernate.show_sql" value="true" />
+         <property name="hibernate.show_sql" value="false" />
 		</properties>
 	</persistence-unit>
 </persistence>

@@ -20,12 +20,12 @@ public class ConsensusSNPIndexer extends Indexer {
 		resetIndex();
 		try {
 			
-			ResultSet set = sql.executeQuery("select _accession_key from snp.snp_accession where _logicaldb_key = 73 and _mgitype_key = 30 and accid = 'rs3163500'");
+			ResultSet set = sql.executeQuery("select _accession_key from snp.snp_accession where _logicaldb_key = 73 and _mgitype_key = 30 and accid = 'rs27287906'");
 			
 			int counter = 0;
 			while (set.next()) {
 				if(counter % 1000000 == 0) {
-					System.out.println("Counter: " + counter);
+					log.info("Counter: " + counter);
 				}
 				counter++;
 				
@@ -35,14 +35,11 @@ public class ConsensusSNPIndexer extends Indexer {
 				
 				PrintVisitor p = new PrintVisitor();
 				snp.Accept(p);
-				p.generateOutput(System.out);
+				p.generateOutput(log);
 				
 			}
-			
-			finish();
-
+		
 			set.close();
-			
 			sql.cleanup();
 
 		} catch (SQLException e) {
@@ -50,6 +47,7 @@ public class ConsensusSNPIndexer extends Indexer {
 			System.exit(1);
 		}
 		
+		finish();
 	}
 
 }

@@ -1,15 +1,13 @@
 package org.jax.mgi.snpindexer.util;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
-import java.util.Properties;
 
+import org.apache.log4j.Logger;
 
 public class SQLExecutor {
 
@@ -20,14 +18,14 @@ public class SQLExecutor {
 
 	private int	cursorSize = 0;
 	private boolean autoCommit = true;
-	private ConfigurationHelper config = new ConfigurationHelper();
-
+	private Logger log = Logger.getLogger(getClass());
+	
 	public SQLExecutor(int cursorSize, boolean autoCommit) {
 		this.cursorSize  = cursorSize;
 		this.autoCommit = autoCommit;
 		
 		try {
-			Class.forName(config.getDriver());
+			Class.forName(ConfigurationHelper.getDriver());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -79,7 +77,7 @@ public class SQLExecutor {
 			end = new Date();
 			return set;
 		} catch (Exception e) {
-			System.out.println("DB Error: " + e.getMessage());
+			log.error("DB Error: " + e.getMessage());
 			System.exit(1);
 		}
 		return set;
@@ -88,12 +86,12 @@ public class SQLExecutor {
 	private void initializeConnection() {
 		if (con == null) {
 			try {
-				con = DriverManager.getConnection(config.getDatabaseUrl(), config.getUser(), config.getPassword());
+				con = DriverManager.getConnection(ConfigurationHelper.getDatabaseUrl(), ConfigurationHelper.getUser(), ConfigurationHelper.getPassword());
 				con.setAutoCommit(autoCommit);
-				System.out.println("Database Connection Initialized to: " + config.getDatabaseUrl());
+				log.info("Database Connection Initialized to: " + ConfigurationHelper.getDatabaseUrl());
 			} catch (SQLException e) {
-				System.out.println("Database Connection ERROR: " + e.getMessage());
-				System.out.println("DB Url: " + config.getDatabaseUrl());
+				log.error("Database Connection ERROR: " + e.getMessage());
+				log.error("DB Url: " + ConfigurationHelper.getDatabaseUrl());
 				System.exit(1);
 			}
 		}
@@ -105,7 +103,7 @@ public class SQLExecutor {
 
 	@Override
 	public String toString() {
-		return "SQLExecutor[databaseUrl=" + config.getDatabaseUrl() + "]";
+		return "SQLExecutor[databaseUrl=" + ConfigurationHelper.getDatabaseUrl() + "]";
 	}
 
 }

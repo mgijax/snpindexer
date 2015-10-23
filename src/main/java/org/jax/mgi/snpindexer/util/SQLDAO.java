@@ -7,12 +7,13 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.log4j.Logger;
 
 public class SQLDAO {
 
 	protected EntityManagerFactory entityManagerFactory; // = Persistence.createEntityManagerFactory("SNP-Indexer");
-
 	protected EntityManager em;
+	protected Logger log = Logger.getLogger(getClass());
 
 	public SQLDAO() {
 
@@ -25,7 +26,7 @@ public class SQLDAO {
 			entityManagerFactory = Persistence.createEntityManagerFactory("SNP-Indexer", configOverrides);
 			em = entityManagerFactory.createEntityManager();
 		} catch (Exception e) {
-			System.out.println("DB Connection Error: " + ExceptionUtils.getRootCause(e.getCause()));
+			log.info("DB Connection Error: " + ExceptionUtils.getRootCause(e.getCause()));
 			ConfigurationHelper.printProperties();
 			System.exit(1);
 		}

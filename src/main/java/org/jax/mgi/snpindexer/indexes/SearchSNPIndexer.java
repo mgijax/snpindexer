@@ -32,20 +32,22 @@ public class SearchSNPIndexer extends Indexer {
 			
 			for(int i = 0; i <= chunks; i++) {
 				int start = i * chunkSize;
-				System.out.println("Starting Batch: " + i + " of " + chunks);
+				log.info("Starting Batch: " + i + " of " + chunks);
 				runBatch(start, start + chunkSize);
 				progress(i, chunks);
-				System.out.println();
+				log.info("");
 			}
 			
 			sql.cleanup();
-			finish();
 			
-			System.out.println("Finished SNPSearchIndexer query");
+			
+			log.info("Finished SNPSearchIndexer query");
 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		finish();
 	}
 
 
@@ -90,6 +92,6 @@ public class SearchSNPIndexer extends Indexer {
 		commit();
 		Date endTime = new Date();
 		long time = (endTime.getTime() - startTime.getTime());
-		System.out.println("Batch took: " + time + "ms to process " + counter + " records at a rate of: " + (counter / time) + "r/ms");
+		log.info("Batch took: " + time + "ms to process " + counter + " records at a rate of: " + (counter / time) + "r/ms");
 	}
 }
