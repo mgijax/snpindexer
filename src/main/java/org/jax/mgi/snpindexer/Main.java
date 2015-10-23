@@ -1,10 +1,11 @@
 package org.jax.mgi.snpindexer;
 
+import java.util.Date;
 import java.util.HashMap;
 
 import org.jax.mgi.snpindexer.indexes.ConsensusSNPIndexer;
 import org.jax.mgi.snpindexer.indexes.Indexer;
-import org.jax.mgi.snpindexer.indexes.SNPSearchIndexer;
+import org.jax.mgi.snpindexer.indexes.SearchSNPIndexer;
 
 public class Main {
 	
@@ -14,11 +15,11 @@ public class Main {
 		HashMap<String, Indexer> indexers = new HashMap<String, Indexer>();
 
 		boolean threaded = false;
-
+		System.out.println("Start Time: " + new Date());
 		
 		try {
 			indexers.put("ConsensusSNPIndex", new ConsensusSNPIndexer("ConsensusSNPIndex"));
-			indexers.put("SearchSNPIndex", new SNPSearchIndexer("SearchSNPIndex"));
+			indexers.put("SearchSNPIndex", new SearchSNPIndexer("SearchSNPIndex"));
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -42,7 +43,7 @@ public class Main {
 			}
 		}
 		
-		
+		System.out.println("End Time: " + new Date());
 		System.exit(0);
 	}
 

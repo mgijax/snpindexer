@@ -2,6 +2,7 @@ package org.jax.mgi.snpindexer.indexes;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.ConcurrentUpdateSolrClient;
@@ -15,9 +16,12 @@ public abstract class Indexer extends Thread {
 	protected ConcurrentUpdateSolrClient client = null;
 	protected ConcurrentUpdateSolrClient adminClient = null;
 	
-	private String coreName = "";
 	protected static ConfigurationHelper config; // This is a static class so the constructor gets run automatically
 	protected SQLExecutor sql = new SQLExecutor(10000, false);
+	
+	
+	private String coreName = "";
+	private Date startTime;
 
 	public Indexer(String coreName) {
 		this.coreName = coreName;
@@ -61,6 +65,7 @@ public abstract class Indexer extends Thread {
 	}
 	
 	public void finish() {
+		progress(100, 100);
 		try {
 			client.commit();
 		} catch (SolrServerException e) {
@@ -74,6 +79,18 @@ public abstract class Indexer extends Thread {
 	public void resetIndex() {
 		deleteIndex();
 		createIndex();
+		startTime = new Date();
+	}
+	
+	protected void progress(int current, int total) {
+		double percent = ((double)current / (double)total);
+		Date now = new Date();
+		long diff = now.getTime() - startTime.getTime();
+		if(percent > 0) {
+			int perms = (int)(diff / percent);
+			Date end = new Date(startTime.getTime() + perms);
+			System.out.println("Percentage complete: " + (int)(percent * 100) + "% Estimated Finish: " + end);
+		}
 	}
 	
 	private void createIndex() {
