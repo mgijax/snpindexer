@@ -69,6 +69,7 @@ public abstract class Indexer extends Thread {
 					client.commit();
 				} catch (Exception e1) {
 					log.warn("Problem with Commit: " + ExceptionUtils.getRootCause(e1.getCause()));
+					e1.printStackTrace();
 				}
 			}
 			log.error("Could not commit batch to solr exiting");
