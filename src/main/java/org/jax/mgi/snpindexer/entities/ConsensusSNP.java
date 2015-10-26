@@ -40,13 +40,16 @@ public class ConsensusSNP extends SNPEntity implements Serializable {
 	
 	@OneToMany(mappedBy="consensusKey")
 	private List<CoordCache> coordCaches;
-	
-	@Transient
-	private List<SubSnpAccession> subSnpAccessions;
-	
+
 	@OneToMany(mappedBy="key")
 	private List<ConsensusSNPAllele> consensusSNPAlleles;
 	
+	@OneToMany(mappedBy="consensusKey")
+	private List<SubSnp> subSnps;
+
+	@Transient
+	private AccessionObject consensusAccession;
+
 	public int getKey() {
 		return key;
 	}
@@ -95,19 +98,26 @@ public class ConsensusSNP extends SNPEntity implements Serializable {
 	public void setCoordCaches(List<CoordCache> coordCaches) {
 		this.coordCaches = coordCaches;
 	}
-	@Transient
-	public List<SubSnpAccession> getSubSnpAccessions() {
-		return subSnpAccessions;
-	}
-	@Transient
-	public void setSubSnpAccessions(List<SubSnpAccession> subSnpAccessions) {
-		this.subSnpAccessions = subSnpAccessions;
-	}
 	public List<ConsensusSNPAllele> getConsensusSNPAlleles() {
 		return consensusSNPAlleles;
 	}
 	public void setConsensusSNPAlleles(List<ConsensusSNPAllele> consensusSNPAlleles) {
 		this.consensusSNPAlleles = consensusSNPAlleles;
+	}
+	public List<SubSnp> getSubSnps() {
+		return subSnps;
+	}
+	public void setSubSnps(List<SubSnp> subSnps) {
+		this.subSnps = subSnps;
+	}
+	
+	@Transient
+	public AccessionObject getConsensusAccession() {
+		return consensusAccession;
+	}
+	@Transient
+	public void setConsensusAccession(AccessionObject consensusAccession) {
+		this.consensusAccession = consensusAccession;
 	}
 	
 	@Override

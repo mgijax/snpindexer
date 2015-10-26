@@ -1,6 +1,6 @@
 package org.jax.mgi.snpindexer.visitors;
 
-import org.jax.mgi.snpindexer.entities.Consensus;
+import org.jax.mgi.snpindexer.entities.AccessionObject;
 import org.jax.mgi.snpindexer.entities.ConsensusMarker;
 import org.jax.mgi.snpindexer.entities.ConsensusSNP;
 import org.jax.mgi.snpindexer.entities.ConsensusSNPAllele;
@@ -11,30 +11,9 @@ import org.jax.mgi.snpindexer.entities.Population;
 import org.jax.mgi.snpindexer.entities.Strain;
 import org.jax.mgi.snpindexer.entities.SubSNPStrainAllele;
 import org.jax.mgi.snpindexer.entities.SubSnp;
-import org.jax.mgi.snpindexer.entities.SubSnpAccession;
 import org.jax.mgi.snpindexer.entities.VOC_Term;
 
 public class PrintVisitor extends PrinterUtil implements VisitorInterface {
-	
-	@Override
-	public void Visit(Consensus consensus) {
-		printi("Consensus: {");
-		printiu("Key: " + consensus.getKey());
-		printiu("Accid: " + consensus.getAccid());
-		consensus.getConsensusSNP().Accept(this);
-		printu("}");
-	}
-
-	@Override
-	public void Visit(SubSnpAccession subSnpAccession) {
-		printi("SubSnpAccession: {");
-		printiu("Key: " + subSnpAccession.getKey());
-		printiu("Accid: " + subSnpAccession.getAccid());
-		printiu("LogicalDBKey: " + subSnpAccession.getLogicalDBKey());
-		printiu("MgiTypeKey: " + subSnpAccession.getMgiTypeKey());
-		subSnpAccession.getSubSnp().Accept(this);
-		printu("}");
-	}
 
 	@Override
 	public void Visit(ConsensusMarker consensusMarker) {
@@ -61,6 +40,7 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 	@Override
 	public void Visit(ConsensusSNP consensusSNP) {
 		printi("ConsensusSNP: {");
+		consensusSNP.getConsensusAccession().Accept(this);
 		printi("Variation Class: {");
 		consensusSNP.getVocTerm().Accept(this);
 		printu("}");
@@ -77,12 +57,6 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 		printi("CoordCaches: [");
 		for(CoordCache c: consensusSNP.getCoordCaches()) {
 			c.Accept(this);
-		}
-		printu("]");
-		
-		printi("SubSnpAccessions: [");
-		for(SubSnpAccession s: consensusSNP.getSubSnpAccessions()) {
-			s.Accept(this);
 		}
 		printu("]");
 		
@@ -161,9 +135,9 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 		printi("Population: {");
 		printiu("Key: " + population.getKey());
 		printiu("Subhandle Text: " + population.getSubHandleText());
-		printi("Subhandle: {");
-		population.getSubHandle().Accept(this);
-		printu("}");
+		//printi("Subhandle: {");
+		//population.getSubHandle().Accept(this);
+		//printu("}");
 		printiu("Name: " + population.getName());
 		printu("}");
 	}
@@ -203,5 +177,14 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 		printu("}");
 	}
 
+	@Override
+	public void Visit(AccessionObject accessionObject) {
+		printi("Accession: {");
+		printiu("Key: " + accessionObject.getKey());
+		printiu("Accid: " + accessionObject.getAccid());
+		printiu("LogicalDBKey: " + accessionObject.getLogicalDBKey());
+		printiu("MgiTypeKey: " + accessionObject.getMgiTypeKey());
+		printu("}");
+	}
 
 }

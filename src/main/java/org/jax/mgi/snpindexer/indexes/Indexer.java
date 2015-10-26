@@ -60,26 +60,19 @@ public abstract class Indexer extends Thread {
 	public void commit() {
 		try {
 			client.commit();
-		} catch (SolrServerException e) {
+		} catch (Exception e) {
 			int trys = 5;
 			while(trys-- > 0) {
 				try {
 					Thread.sleep(5000);
-					client.commit();
-				} catch (SolrServerException e1) {
-					log.warn("Problem with Commit: " + ExceptionUtils.getRootCause(e1.getCause()));
 					log.warn("Retrying Commit: ");
-				} catch (IOException e1) {
-					e1.printStackTrace();
-				} catch (InterruptedException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					client.commit();
+				} catch (Exception e1) {
+					log.warn("Problem with Commit: " + ExceptionUtils.getRootCause(e1.getCause()));
 				}
 			}
 			log.error("Could not commit batch to solr exiting");
 			System.exit(1);
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 	

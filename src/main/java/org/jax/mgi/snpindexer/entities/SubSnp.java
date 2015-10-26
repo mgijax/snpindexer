@@ -51,6 +51,12 @@ public class SubSnp extends SNPEntity implements Serializable {
 	@OneToMany(mappedBy="key")
 	private List<SubSNPStrainAllele> subSNPStrainAlleles;
 	
+	@Transient
+	private AccessionObject submitterSNPId;
+	
+	@Transient
+	private AccessionObject subSNPAccessionObject;
+
 	public int getKey() {
 		return key;
 	}
@@ -100,15 +106,34 @@ public class SubSnp extends SNPEntity implements Serializable {
 		this.subSNPStrainAlleles = subSNPStrainAlleles;
 	}
 
+	
 	@Transient
 	public Population getPopulation() {
 		return (Population)populationList.toArray()[0];
 	}
+	@Transient
+	public AccessionObject getSubmitterSNPId() {
+		return submitterSNPId;
+	}
+	@Transient
+	public void setSubmitterSNPId(AccessionObject submitterSNPId) {
+		this.submitterSNPId = submitterSNPId;
+	}
+	@Transient
+	public AccessionObject getSubSNPAccessionObject() {
+		return subSNPAccessionObject;
+	}
+	@Transient
+	public void setSubSNPAccessionObject(AccessionObject subSNPAccessionObject) {
+		this.subSNPAccessionObject = subSNPAccessionObject;
+	}
+	
 	
 	@Override
 	@Transient
 	public void Accept(VisitorInterface pi) {
 		pi.Visit(this);
 	}
+
 
 }

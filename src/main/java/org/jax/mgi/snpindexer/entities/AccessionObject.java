@@ -5,28 +5,26 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import org.jax.mgi.snpindexer.visitors.VisitorInterface;
 
-@Entity
-@Table(name="snp.snp_accession")
 
 @NamedQueries({
-	@NamedQuery(name="subsnpaccession", query="select s from SubSnpAccession s where s.subSnp.consensusKey = :key and s.logicalDBKey=74 and s.mgiTypeKey=31")
+	@NamedQuery(name="accessionobject", query="select a from AccessionObject a where a.objectKey = :key and a.logicalDBKey = :logicalDBKey and a.mgiTypeKey = :mgiTypeKey"),
 })
 
-public class SubSnpAccession extends SNPEntity implements Serializable {
-
+@Entity
+@Table(name="snp.snp_accession")
+public class AccessionObject extends SNPEntity implements Serializable {
+	
 	@Id
 	@Column(name="_accession_key")
 	private int key;
-	
+
 	@Column(name="accid")
 	private String accid;
 	
@@ -36,12 +34,8 @@ public class SubSnpAccession extends SNPEntity implements Serializable {
 	@Column(name="_mgitype_key")
 	private int mgiTypeKey;
 	
-	@Column(name="_object_key", insertable=false, updatable=false)
+	@Column(name="_object_key")
 	private int objectKey;
-	
-	@OneToOne
-	@JoinColumn(name="_object_key", referencedColumnName="_subsnp_key") 
-	private SubSnp subSnp;
 
 	public int getKey() {
 		return key;
@@ -67,11 +61,11 @@ public class SubSnpAccession extends SNPEntity implements Serializable {
 	public void setMgiTypeKey(int mgiTypeKey) {
 		this.mgiTypeKey = mgiTypeKey;
 	}
-	public SubSnp getSubSnp() {
-		return subSnp;
+	public int getObjectKey() {
+		return objectKey;
 	}
-	public void setSubSnp(SubSnp subSnp) {
-		this.subSnp = subSnp;
+	public void setObjectKey(int objectKey) {
+		this.objectKey = objectKey;
 	}
 	
 	@Override
@@ -79,5 +73,4 @@ public class SubSnpAccession extends SNPEntity implements Serializable {
 	public void Accept(VisitorInterface pi) {
 		pi.Visit(this);
 	}
-
 }

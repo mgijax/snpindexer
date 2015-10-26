@@ -25,7 +25,7 @@ public class Main {
 		log.info("Start Time: " + new Date());
 		
 		try {
-			//indexers.put("ConsensusSNPIndex", new ConsensusSNPIndexer("ConsensusSNPIndex"));
+			indexers.put("ConsensusSNPIndex", new ConsensusSNPIndexer("ConsensusSNPIndex"));
 			indexers.put("SearchSNPIndex", new SearchSNPIndexer("SearchSNPIndex"));
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -37,7 +37,9 @@ public class Main {
 			if(threaded) {
 				indexers.get(name).start();
 			} else {
-				indexers.get(name).index();
+				if(args.length > 0 && args[0].equals(name)) {
+					indexers.get(name).index();
+				}
 			}
 		}
 
