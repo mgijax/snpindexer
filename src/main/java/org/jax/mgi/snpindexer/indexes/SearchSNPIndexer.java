@@ -10,6 +10,8 @@ import org.apache.solr.common.SolrInputDocument;
 
 public class SearchSNPIndexer extends Indexer {
 
+	private int batchNumber = 0;
+
 	public SearchSNPIndexer(String coreName) {
 		super(coreName);
 	}
@@ -27,12 +29,13 @@ public class SearchSNPIndexer extends Indexer {
 			int end = set.getInt("maxKey");
 			set.close();
 
-			int chunkSize = 20000;
+			int chunkSize = 10000;
 			int chunks = end / chunkSize;
 			
 			for(int i = 0; i <= chunks; i++) {
 				int start = i * chunkSize;
 				log.info("Starting Batch: " + i + " of " + chunks);
+				batchNumber = i;
 				runBatch(start, start + chunkSize);
 				progress(i, chunks);
 				log.info("");
@@ -82,14 +85,16 @@ public class SearchSNPIndexer extends Indexer {
 			doc.addField("strain", set.getString("strain"));
 		
 			docCache.add(doc);
-			if (docCache.size() >= (diff / 10))  {
+			if (docCache.size() >= (diff / 25))  {
 				addDocuments(docCache);
 				docCache.clear();
 			}
 
 		}
 		if(!docCache.isEmpty()) addDocuments(docCache);
-		commit();
+		if(batchNumber > 0 && batchNumber % 2 == 0) {
+			commit();
+		}
 		Date endTime = new Date();
 		long time = (endTime.getTime() - startTime.getTime());
 		log.info("Batch took: " + time + "ms to process " + counter + " records at a rate of: " + (counter / time) + "r/ms");

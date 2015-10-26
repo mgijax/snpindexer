@@ -19,7 +19,7 @@ public abstract class Indexer extends Thread {
 	protected ConcurrentUpdateSolrClient adminClient = null;
 	
 	protected static ConfigurationHelper config; // This is a static class so the constructor gets run automatically
-	protected SQLExecutor sql = new SQLExecutor(10000, false);
+	protected SQLExecutor sql = new SQLExecutor(75000, false);
 	protected Logger log = Logger.getLogger(getClass());
 	
 	private String coreName = "";
@@ -142,7 +142,7 @@ public abstract class Indexer extends Thread {
 	public void setupServer() {
 		if(client == null) {
 			log.info("Setup Solr Client to use Solr Url: " + config.getSolrBaseUrl() + "/" + coreName);
-			client = new ConcurrentUpdateSolrClient(config.getSolrBaseUrl() + "/" + coreName, 100000, 2);
+			client = new ConcurrentUpdateSolrClient(config.getSolrBaseUrl() + "/" + coreName, 20000, 5);
 		}
 		if(adminClient == null) {
 			adminClient = new ConcurrentUpdateSolrClient(config.getSolrBaseUrl(), 1, 1);
