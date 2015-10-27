@@ -1,16 +1,24 @@
 package org.jax.mgi.snpindexer.indexes;
 
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.util.Hash;
 
 public class SearchSNPIndexer extends Indexer {
 
-	private int batchNumber = 0;
+	private HashMap<Integer, String> consensusKeys = new HashMap<Integer, String>();
+	
+	private HashMap<Integer, String> variationMap = new HashMap<Integer, String>();
+	private HashMap<Integer, String> functionMap = new HashMap<Integer, String>();
+	private HashMap<Integer, String> markerAccessionMap = new HashMap<Integer, String>();
+	private HashMap<Integer, String> strainMap = new HashMap<Integer, String>();
 
 	public SearchSNPIndexer(String coreName) {
 		super(coreName);
@@ -23,19 +31,56 @@ public class SearchSNPIndexer extends Indexer {
 
 		try {
 
-			ResultSet set = sql.executeQuery("select max(sa._object_key) as maxKey from snp.snp_accession sa where sa._logicaldb_key = 73 and sa._mgitype_key = 30");
+			log.info("Starting Load Function Type Map");
+			ResultSet set = sql.executeQuery("select _term_key, term from mgd.voc_term where _vocab_key = 49");
+			while (set.next()) {
+				functionMap.put(set.getInt("_term_key"), set.getString("term"));
+			}
+			set.close();
+			log.info("Finished Load Function Type Map");
+
+			log.info("Starting Load Variation Type Map");
+			set = sql.executeQuery("select _term_key, term from mgd.voc_term where _vocab_key = 50");
+			while (set.next()) {
+				variationMap.put(set.getInt("_term_key"), set.getString("term"));
+			}
+			set.close();
+			log.info("Finished Load Variation Type Map");
+
+			log.info("Starting Load Strains Map");
+			set = sql.executeQuery("select _mgdstrain_key, strain from snp.snp_strain");
+			while (set.next()) {
+				strainMap.put(set.getInt("_mgdstrain_key"), set.getString("strain"));
+			}
+			set.close();
+			log.info("Finished Load Strains Map");
+
+			log.info("Starting Load Marker Accession Map");
+			set = sql.executeQuery("select _object_key, accid from mgd.acc_accession a where a._mgitype_key = 2 and a._logicaldb_key = 1");
+			while (set.next()) {
+				markerAccessionMap.put(set.getInt("_object_key"), set.getString("accid"));
+			}
+			set.close();
+			log.info("Finished Load Marker Accession Map");
+			
+			
+			
+			
+			
+			
+
+			set = sql.executeQuery("select max(sa._object_key) as maxKey from snp.snp_accession sa where sa._logicaldb_key = 73 and sa._mgitype_key = 30");
 
 			set.next();
 			int end = set.getInt("maxKey");
 			set.close();
 
-			int chunkSize = 10000;
+			int chunkSize = 50000;
 			int chunks = end / chunkSize;
 			
 			for(int i = 0; i <= chunks; i++) {
 				int start = i * chunkSize;
 				log.info("Starting Batch: " + i + " of " + chunks);
-				batchNumber = i;
 				runBatch(start, start + chunkSize);
 				progress(i, chunks);
 				log.info("");
@@ -43,10 +88,14 @@ public class SearchSNPIndexer extends Indexer {
 			
 			sql.cleanup();
 			
-			
+			client.commit();
 			log.info("Finished SNPSearchIndexer query");
 
 		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (SolrServerException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
@@ -58,14 +107,13 @@ public class SearchSNPIndexer extends Indexer {
 
 		Date startTime = new Date();
 		int diff = end - start;
-
+		
 		ResultSet set = sql.executeQuery("select "
-				+ "sa.accid as consensussnp_accid, scc.chromosome, scc.startcoordinate, scc.ismulticoord, vt1.term as varclass, vt2.term as fxn, a.accid as marker_accid, ss.strain "
+				+ "sa.accid as consensussnp_accid, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc._varclass_key, scm._fxn_key, scm._marker_key, scs._mgdstrain_key "
 				+ "from "
-				+ "snp.snp_accession sa, snp.snp_coord_cache scc, snp.snp_consensussnp_marker scm, snp.snp_consensussnp_strainallele scs, snp.snp_strain ss, mgd.voc_term vt1, mgd.voc_term vt2, mgd.acc_accession a "
+				+ "snp.snp_accession sa, snp.snp_coord_cache scc, snp.snp_consensussnp_marker scm, snp.snp_consensussnp_strainallele scs "
 				+ "where "
 				+ "sa._object_key = scc._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and scc._coord_cache_key = scm._coord_cache_key and scc._consensussnp_key = scs._consensussnp_key and "
-				+ "scs._mgdstrain_key = ss._mgdstrain_key and scc._varclass_key = vt1._term_key and scm._fxn_key = vt2._term_key and scm._marker_key = a._object_key and a._mgitype_key = 2 and a._logicaldb_key = 1 and "
 				+ "sa._object_key > " + start + " and sa._object_key <= " + end);
 
 		ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
@@ -75,28 +123,36 @@ public class SearchSNPIndexer extends Indexer {
 			counter++;
 
 			SolrInputDocument doc = new SolrInputDocument();
+			
 			doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
+			
 			doc.addField("chromosome", set.getString("chromosome"));
 			doc.addField("startcoordinate", set.getDouble("startcoordinate"));
 			doc.addField("ismulticoord", set.getInt("ismulticoord"));
-			doc.addField("varclass", set.getString("varclass"));
-			doc.addField("fxn", set.getString("fxn"));
-			doc.addField("marker_accid", set.getString("marker_accid"));
-			doc.addField("strain", set.getString("strain"));
+			doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
+			doc.addField("fxn", functionMap.get(set.getInt("_fxn_key")));
+			doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
+			doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
 		
+
+			
 			docCache.add(doc);
-			if (docCache.size() >= (diff / 25))  {
+			if (docCache.size() >= 10000)  {
 				addDocuments(docCache);
 				docCache.clear();
 			}
-
 		}
-		if(!docCache.isEmpty()) addDocuments(docCache);
-		if(batchNumber > 0 && batchNumber % 2 == 0) {
-			commit();
+		if(!docCache.isEmpty()) {
+			addDocuments(docCache);
+			docCache.clear();
 		}
+		
+		set.close();
+		
 		Date endTime = new Date();
 		long time = (endTime.getTime() - startTime.getTime());
 		log.info("Batch took: " + time + "ms to process " + counter + " records at a rate of: " + (counter / time) + "r/ms");
+		
+
 	}
 }

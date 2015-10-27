@@ -19,7 +19,7 @@ public abstract class Indexer extends Thread {
 	protected ConcurrentUpdateSolrClient adminClient = null;
 	
 	protected static ConfigurationHelper config; // This is a static class so the constructor gets run automatically
-	protected SQLExecutor sql = new SQLExecutor(75000, false);
+	protected SQLExecutor sql = new SQLExecutor(50000, false);
 	protected Logger log = Logger.getLogger(getClass());
 	
 	private String coreName = "";
@@ -28,7 +28,6 @@ public abstract class Indexer extends Thread {
 	public Indexer(String coreName) {
 		this.coreName = coreName;
 		setupServer();
-
 	}
 
 	public abstract void index();
@@ -136,7 +135,12 @@ public abstract class Indexer extends Thread {
 	public void setupServer() {
 		if(client == null) {
 			log.info("Setup Solr Client to use Solr Url: " + config.getSolrBaseUrl() + "/" + coreName);
-			client = new ConcurrentUpdateSolrClient(config.getSolrBaseUrl() + "/" + coreName, 20000, 5);
+			
+			// Note queue size here is the size of the request that the amount of documents
+			// So if adding documents in batches you will have queue * document batch size in
+			// memory at any given time
+			client = new ConcurrentUpdateSolrClient(config.getSolrBaseUrl() + "/" + coreName, 160, 8);
+			client.setConnectionTimeout(100000);
 		}
 		if(adminClient == null) {
 			adminClient = new ConcurrentUpdateSolrClient(config.getSolrBaseUrl(), 1, 1);
