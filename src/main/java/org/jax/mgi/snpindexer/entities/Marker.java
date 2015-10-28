@@ -24,6 +24,9 @@ public class Marker extends SNPEntity implements Serializable {
 	@Column(name="name")
 	private String name;
 	
+	@Transient
+	private MGDAccessionObject markerAccession;
+
 	public int getKey() {
 		return key;
 	}
@@ -41,6 +44,15 @@ public class Marker extends SNPEntity implements Serializable {
 	}
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	@Transient
+	public MGDAccessionObject getMarkerAccession() {
+		return markerAccession;
+	}
+	@Transient
+	public void setMarkerAccession(MGDAccessionObject markerAccession) {
+		this.markerAccession = markerAccession;
 	}
 
 	@Override

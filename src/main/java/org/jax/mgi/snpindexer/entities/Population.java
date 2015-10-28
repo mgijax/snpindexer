@@ -1,12 +1,14 @@
 package org.jax.mgi.snpindexer.entities;
 
 import java.io.Serializable;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -32,7 +34,12 @@ public class Population extends SNPEntity implements Serializable {
 	@Column(name="name")
 	private String name;
 	
+	@Transient
+	private List<SubSNPStrainAllele> subSNPStrainAlleles;
 	
+	@Transient
+	private SNPAccessionObject populationAccession;
+
 	public int getKey() {
 		return key;
 	}
@@ -56,6 +63,23 @@ public class Population extends SNPEntity implements Serializable {
 	}
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	@Transient
+	public List<SubSNPStrainAllele> getSubSNPStrainAlleles() {
+		return subSNPStrainAlleles;
+	}
+	@Transient
+	public void setSubSNPStrainAlleles(List<SubSNPStrainAllele> subSNPStrainAlleles) {
+		this.subSNPStrainAlleles = subSNPStrainAlleles;
+	}
+	@Transient
+	public SNPAccessionObject getPopulationAccession() {
+		return populationAccession;
+	}
+	@Transient
+	public void setPopulationAccession(SNPAccessionObject populationAccession) {
+		this.populationAccession = populationAccession;
 	}
 	
 	@Override

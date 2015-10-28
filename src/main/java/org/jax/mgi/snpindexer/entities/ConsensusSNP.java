@@ -48,7 +48,7 @@ public class ConsensusSNP extends SNPEntity implements Serializable {
 	private List<SubSnp> subSnps;
 
 	@Transient
-	private AccessionObject consensusAccession;
+	private SNPAccessionObject consensusAccession;
 
 	public int getKey() {
 		return key;
@@ -112,11 +112,11 @@ public class ConsensusSNP extends SNPEntity implements Serializable {
 	}
 	
 	@Transient
-	public AccessionObject getConsensusAccession() {
+	public SNPAccessionObject getConsensusAccession() {
 		return consensusAccession;
 	}
 	@Transient
-	public void setConsensusAccession(AccessionObject consensusAccession) {
+	public void setConsensusAccession(SNPAccessionObject consensusAccession) {
 		this.consensusAccession = consensusAccession;
 	}
 	

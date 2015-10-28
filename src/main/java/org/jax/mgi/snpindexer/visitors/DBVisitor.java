@@ -1,6 +1,7 @@
 package org.jax.mgi.snpindexer.visitors;
 
-import org.jax.mgi.snpindexer.entities.AccessionObject;
+import org.jax.mgi.snpindexer.entities.MGDAccessionObject;
+import org.jax.mgi.snpindexer.entities.SNPAccessionObject;
 import org.jax.mgi.snpindexer.entities.ConsensusMarker;
 import org.jax.mgi.snpindexer.entities.ConsensusSNP;
 import org.jax.mgi.snpindexer.entities.ConsensusSNPAllele;
@@ -24,10 +25,25 @@ public class DBVisitor implements VisitorInterface {
 
 	@Override
 	public void Visit(ConsensusSNP consensusSNP) {
-		consensusSNP.setConsensusAccession(dao.getAccessionObject(consensusSNP.getKey(), 73, 30));
+		consensusSNP.setConsensusAccession(dao.getSNPAccessionObject(consensusSNP.getKey(), 73, 30));
+		consensusSNP.getConsensusAccession().Accept(this);
+		consensusSNP.getVocTerm().Accept(this);
+		for(Flank f: consensusSNP.getFlanks()) {
+			f.Accept(this);
+		}
+		for(CoordCache c: consensusSNP.getCoordCaches()) {
+			c.Accept(this);
+		}
+		for(SubSnp s: consensusSNP.getSubSnps()) {
+			s.Accept(this);
+		}
+		for(ConsensusSNPAllele c: consensusSNP.getConsensusSNPAlleles()) {
+			c.Accept(this);
+		}
 	}
 	@Override
 	public void Visit(Population population) {
+		population.setPopulationAccession(dao.getSNPAccessionObject(population.getKey(), 76, 33));
 	}
 	@Override
 	public void Visit(VOC_Term voc_Term) {
@@ -37,11 +53,19 @@ public class DBVisitor implements VisitorInterface {
 	}
 	@Override
 	public void Visit(CoordCache coordCache) {
+		coordCache.getVocTerm().Accept(this);
+		for(ConsensusMarker cm: coordCache.getConsensusMarker()) {
+			cm.Accept(this);
+		}
 	}
 	@Override
 	public void Visit(SubSnp subSnp) {
-		subSnp.setSubmitterSNPId(dao.getAccessionObject(subSnp.getKey(), 75, 30));
-		subSnp.setSubSNPAccessionObject(dao.getAccessionObject(subSnp.getKey(), 74, 31));
+		subSnp.setSubmitterSNPId(dao.getSNPAccessionObject(subSnp.getKey(), 75, 31));
+		subSnp.setSubSNPAccessionObject(dao.getSNPAccessionObject(subSnp.getKey(), 74, 31));
+		for(Population p: subSnp.getPopulationList()) {
+			p.setSubSNPStrainAlleles(dao.getSubSNPStrainAlleles(subSnp.getKey(), p.getKey()));
+			p.Accept(this);
+		}
 	}
 	@Override
 	public void Visit(SubSNPStrainAllele subSNPStrainAllele) {
@@ -54,11 +78,19 @@ public class DBVisitor implements VisitorInterface {
 	}
 	@Override
 	public void Visit(ConsensusMarker consensusMarker) {
+		consensusMarker.setTranscript(dao.getSNPAccessionObject(consensusMarker.getKey(), 27, 32, "NM_"));
+		consensusMarker.setProtein(dao.getSNPAccessionObject(consensusMarker.getKey(), 27, 32, "NP_"));
+		consensusMarker.getMarker().Accept(this);
 	}
 	@Override
 	public void Visit(Marker marker) {
+		marker.setMarkerAccession(dao.getMGDAccessionObject(marker.getKey(), 1, 2));
+	}
+	
+	@Override
+	public void Visit(SNPAccessionObject accessionObject) {
 	}
 	@Override
-	public void Visit(AccessionObject accessionObject) {
+	public void Visit(MGDAccessionObject accessionObject) {
 	}
 }

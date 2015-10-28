@@ -1,6 +1,7 @@
 package org.jax.mgi.snpindexer.entities;
 
 import java.io.Serializable;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -46,6 +47,12 @@ public class ConsensusMarker extends SNPEntity implements Serializable {
 	@ManyToOne
 	@JoinColumn(name="_marker_key", referencedColumnName="_marker_key") 
 	private Marker marker;
+	
+	@Transient
+	private SNPAccessionObject transcript;
+	
+	@Transient
+	private SNPAccessionObject protein;
 	
 	public int getKey() {
 		return key;
@@ -102,6 +109,23 @@ public class ConsensusMarker extends SNPEntity implements Serializable {
 		this.marker = marker;
 	}
 
+	@Transient
+	public SNPAccessionObject getTranscript() {
+		return transcript;
+	}
+	@Transient
+	public void setTranscript(SNPAccessionObject transcript) {
+		this.transcript = transcript;
+	}
+	@Transient
+	public SNPAccessionObject getProtein() {
+		return protein;
+	}
+	@Transient
+	public void setProtein(SNPAccessionObject protein) {
+		this.protein = protein;
+	}
+	
 	@Override
 	@Transient
 	public void Accept(VisitorInterface pi) {

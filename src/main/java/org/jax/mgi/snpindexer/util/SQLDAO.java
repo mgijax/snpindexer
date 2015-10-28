@@ -26,8 +26,9 @@ public class SQLDAO {
 			entityManagerFactory = Persistence.createEntityManagerFactory("SNP-Indexer", configOverrides);
 			em = entityManagerFactory.createEntityManager();
 		} catch (Exception e) {
-			log.info("DB Connection Error: " + ExceptionUtils.getRootCause(e.getCause()));
+			log.error("DB Connection Error: " + ExceptionUtils.getRootCause(e.getCause()));
 			ConfigurationHelper.printProperties();
+			e.printStackTrace();
 			System.exit(1);
 		}
 	}

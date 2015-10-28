@@ -1,6 +1,7 @@
 package org.jax.mgi.snpindexer.visitors;
 
-import org.jax.mgi.snpindexer.entities.AccessionObject;
+import org.jax.mgi.snpindexer.entities.MGDAccessionObject;
+import org.jax.mgi.snpindexer.entities.SNPAccessionObject;
 import org.jax.mgi.snpindexer.entities.ConsensusMarker;
 import org.jax.mgi.snpindexer.entities.ConsensusSNP;
 import org.jax.mgi.snpindexer.entities.ConsensusSNPAllele;
@@ -26,6 +27,7 @@ public interface VisitorInterface {
 	void Visit(ConsensusSNPAllele consensusSNPAllele);
 	void Visit(ConsensusMarker consensusMarker);
 	void Visit(Marker marker);
-	void Visit(AccessionObject accessionObject);
+	void Visit(SNPAccessionObject accessionObject);
+	void Visit(MGDAccessionObject accessionObject);
 	
 }

@@ -14,12 +14,13 @@ import org.jax.mgi.snpindexer.visitors.VisitorInterface;
 
 
 @NamedQueries({
-	@NamedQuery(name="accessionobject", query="select a from AccessionObject a where a.objectKey = :key and a.logicalDBKey = :logicalDBKey and a.mgiTypeKey = :mgiTypeKey"),
+	@NamedQuery(name="snpaccessionobjectprefix", query="select a from SNPAccessionObject a where a.objectKey = :key and a.logicalDBKey = :logicalDBKey and a.mgiTypeKey = :mgiTypeKey and a.prefixPart = :prefixPart"),
+	@NamedQuery(name="snpaccessionobject", query="select a from SNPAccessionObject a where a.objectKey = :key and a.logicalDBKey = :logicalDBKey and a.mgiTypeKey = :mgiTypeKey"),
 })
 
 @Entity
 @Table(name="snp.snp_accession")
-public class AccessionObject extends SNPEntity implements Serializable {
+public class SNPAccessionObject extends SNPEntity implements Serializable {
 	
 	@Id
 	@Column(name="_accession_key")
@@ -27,6 +28,9 @@ public class AccessionObject extends SNPEntity implements Serializable {
 
 	@Column(name="accid")
 	private String accid;
+	
+	@Column(name="prefixpart")
+	private String prefixPart;
 	
 	@Column(name="_logicaldb_key")
 	private int logicalDBKey;

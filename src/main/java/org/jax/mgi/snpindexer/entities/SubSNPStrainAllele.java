@@ -7,10 +7,17 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import org.jax.mgi.snpindexer.visitors.VisitorInterface;
+
+
+@NamedQueries({
+	@NamedQuery(name="subsnpalleles", query="select s from SubSNPStrainAllele s where s.key = :key and s.populationKey = :populationKey"),
+})
 
 @Entity
 @Table(name="snp.snp_subsnp_strainallele")
@@ -19,6 +26,10 @@ public class SubSNPStrainAllele extends SNPEntity implements Serializable {
 	@Id
 	@Column(name="_subsnp_key")
 	private int key;
+	
+	@Id
+	@Column(name="_population_key")
+	private int populationKey;
 	
 	@Id
 	@ManyToOne
