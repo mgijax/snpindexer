@@ -32,6 +32,7 @@ public class Main {
 			System.exit(1);
 		}
 		
+		
 		for(String name: indexers.keySet()) {
 			log.info("Starting Index for: " + name);
 			if(threaded) {
@@ -44,9 +45,12 @@ public class Main {
 		}
 
 		// Wait will they are all finsihed before exiting
+		
 		for(Indexer i: indexers.values()) {
 			try {
-				i.join();
+				if(i.isAlive()) {
+					i.join();
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

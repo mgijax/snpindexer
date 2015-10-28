@@ -103,7 +103,9 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 		printiu("Startcoordinate: " + (int)coordCache.getStartcoordinate());
 		printiu("IsMultiCoord: " + coordCache.getIsMultiCoord());
 		printiu("Strand: " + coordCache.getStrand());
+		printi("Variation Class: {");
 		coordCache.getVocTerm().Accept(this);
+		printu("}");
 		printiu("AlleleSummary: " + coordCache.getAlleleSummary());
 		printiu("Iupaccode: " + coordCache.getIupaccode());
 		printi("Consensus Markers [");
@@ -216,7 +218,9 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 		//printiu("Key: " + marker.getKey());
 		printiu("Symbol: " + marker.getSymbol());
 		printiu("Name: " + marker.getName());
-		marker.getMarkerAccession().Accept(this);
+		if(marker.getMarkerAccession() != null) {
+			marker.getMarkerAccession().Accept(this);
+		}
 		printu("}");
 	}
 

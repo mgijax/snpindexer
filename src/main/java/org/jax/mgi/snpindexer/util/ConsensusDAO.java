@@ -55,6 +55,7 @@ public class ConsensusDAO extends SQLDAO {
 		query.setParameter("key", key);
 		query.setParameter("logicalDBKey", logical_db);
 		query.setParameter("mgiTypeKey", mgi_type);
+		//log.debug("select * from mgd.acc_accession where _object_key=" + key +" and _logicaldb_key=" + logical_db + " and _mgitype_key=" + mgi_type + " and preferred=1");
 		try {
 			return query.getSingleResult();
 		} catch (NoResultException e) {
