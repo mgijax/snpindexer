@@ -35,12 +35,12 @@ public class ConsensusSNPIndexer extends Indexer {
 			//ResultSet set = sql.executeQuery("select _accession_key, _object_key, accid from snp.snp_accession where _logicaldb_key = 73 and _mgitype_key = 30 and accid = 'rs4228732'");
 			
 			// Multiple transcripts and proteins
-			//ResultSet set = sql.executeQuery("select _accession_key, _object_key, accid from snp.snp_accession where _logicaldb_key = 73 and _mgitype_key = 30 and accid = 'rs29392909'");
+			ResultSet set = sql.executeQuery("select _accession_key, _object_key, accid from snp.snp_accession where _logicaldb_key = 73 and _mgitype_key = 30 and accid = 'rs29392909'");
 			//ResultSet set = sql.executeQuery("select _accession_key, _object_key, accid from snp.snp_accession where _logicaldb_key = 73 and _mgitype_key = 30 and accid = 'rs26922505'");
 			
 			
 
-			ResultSet set = sql.executeQuery("select _accession_key, _object_key, accid from snp.snp_accession where _logicaldb_key = 73 and _mgitype_key = 30 and accid = 'rs27287906'");
+			//ResultSet set = sql.executeQuery("select _accession_key, _object_key, accid from snp.snp_accession where _logicaldb_key = 73 and _mgitype_key = 30 and accid = 'rs27287906'");
 			
 			
 			// First 100 result
@@ -61,10 +61,14 @@ public class ConsensusSNPIndexer extends Indexer {
 				DBVisitor db = new DBVisitor(dao);
 				snp.Accept(db);
 				
-				PrintVisitor p = new PrintVisitor();
-				snp.Accept(p);
-				p.generateOutput(System.out);
 				
+//				PrintVisitor p = new PrintVisitor();
+//				snp.Accept(p);
+//				p.generateOutput(System.out);
+				
+				org.jax.mgi.snpdatamodel.visitors.PrintVisitor pi = new org.jax.mgi.snpdatamodel.visitors.PrintVisitor();
+				db.getSolrConsensusSNP().Accept(pi);
+				pi.generateOutput(System.out);
 				
 				//SolrInputDocument doc = new SolrInputDocument();
 				

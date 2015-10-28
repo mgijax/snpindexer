@@ -36,7 +36,7 @@ public class SubSnp extends SNPEntity implements Serializable {
 	private String orientation;
 	
 	@Column(name="isexemplar")
-	private String isexemplar;
+	private int isexemplar;
 	
 	@Column(name="allelesummary")
 	private String alleleSummary;
@@ -78,10 +78,10 @@ public class SubSnp extends SNPEntity implements Serializable {
 	public void setOrientation(String orientation) {
 		this.orientation = orientation;
 	}
-	public String getIsexemplar() {
+	public int getIsexemplar() {
 		return isexemplar;
 	}
-	public void setIsexemplar(String isexemplar) {
+	public void setIsexemplar(int isexemplar) {
 		this.isexemplar = isexemplar;
 	}
 	public String getAlleleSummary() {
