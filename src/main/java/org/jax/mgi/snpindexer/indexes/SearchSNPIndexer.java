@@ -56,7 +56,7 @@ public class SearchSNPIndexer extends Indexer {
 			log.info("Finished Load Strains Map");
 
 			log.info("Starting Load Marker Accession Map");
-			set = sql.executeQuery("select _object_key, accid from mgd.acc_accession a where a._mgitype_key = 2 and a._logicaldb_key = 1");
+			set = sql.executeQuery("select _object_key, accid from mgd.acc_accession a where a._mgitype_key = 2 and a._logicaldb_key = 1 and preferred=1");
 			while (set.next()) {
 				markerAccessionMap.put(set.getInt("_object_key"), set.getString("accid"));
 			}
