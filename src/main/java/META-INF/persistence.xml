@@ -1,11 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+<persistence version="2.1"
+	xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
 	<persistence-unit name="SNP-Indexer">
+		
 		<properties>
-		<!-- This file gets its connection parameters from the ConfigurationHandler class in java -->
-         <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
-         <property name="hibernate.readOnly" value="true" />
-         <property name="hibernate.show_sql" value="false" />
+			<!-- This file gets its connection parameters from the ConfigurationHandler 
+				class in java -->
+				
+			<property name="javax.persistence.sharedCache.mode" value="ALL"/>
+				
+			<property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect" />
+			<property name="hibernate.readOnly" value="true" />
+			<property name="hibernate.format_sql" value="true" />
+			<property name="hibernate.show_sql" value="true" />
+			
+			
+			<property name="hibernate.cache.use_query_cache" value="true" />
+			<property name="hibernate.cache.use_second_level_cache" value="true" />
+
+
+			<property name="hibernate.cache.provider_class" value="org.hibernate.cache.EHCacheProvider" />
+			<property name="hibernate.cache.region.factory_class" value="org.hibernate.cache.ehcache.EhCacheRegionFactory" />
+			
 		</properties>
 	</persistence-unit>
 </persistence>
