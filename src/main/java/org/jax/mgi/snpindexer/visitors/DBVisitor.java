@@ -152,7 +152,9 @@ public class DBVisitor implements VisitorInterface {
 		consensusMarker.getMarker().Accept(this);
 		
 		solrConsensusMarkerSNP.setAaPosition(consensusMarker.getAaPosition());
-		solrConsensusMarkerSNP.setAccid(consensusMarker.getMarker().getMarkerAccession().getAccid());
+		if(consensusMarker.getMarker().getMarkerAccession() != null) {
+			solrConsensusMarkerSNP.setAccid(consensusMarker.getMarker().getMarkerAccession().getAccid());
+		}
 		solrConsensusMarkerSNP.setContigAllele(consensusMarker.getContigAllele());
 		solrConsensusMarkerSNP.setFunctionClass(consensusMarker.getVocTerm().getTerm());
 		solrConsensusMarkerSNP.setName(consensusMarker.getMarker().getName());
