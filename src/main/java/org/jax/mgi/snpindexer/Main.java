@@ -4,12 +4,10 @@ import java.util.Date;
 import java.util.HashMap;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 import org.jax.mgi.snpindexer.indexes.ConsensusSNPIndexer;
 import org.jax.mgi.snpindexer.indexes.Indexer;
 import org.jax.mgi.snpindexer.indexes.SearchSNPIndexer;
 import org.jax.mgi.snpindexer.util.ConfigurationHelper;
-import org.jax.mgi.snpindexer.util.SQLExecutor;
 
 public class Main {
 	

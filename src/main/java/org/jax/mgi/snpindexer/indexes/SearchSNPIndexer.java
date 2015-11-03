@@ -4,17 +4,13 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.util.Hash;
 
 public class SearchSNPIndexer extends Indexer {
 
-	private HashMap<Integer, String> consensusKeys = new HashMap<Integer, String>();
-	
 	private HashMap<Integer, String> variationMap = new HashMap<Integer, String>();
 	private HashMap<Integer, String> functionMap = new HashMap<Integer, String>();
 	private HashMap<Integer, String> markerAccessionMap = new HashMap<Integer, String>();
@@ -63,12 +59,6 @@ public class SearchSNPIndexer extends Indexer {
 			set.close();
 			log.info("Finished Load Marker Accession Map");
 			
-			
-			
-			
-			
-			
-
 			set = sql.executeQuery("select max(sa._object_key) as maxKey from snp.snp_accession sa where sa._logicaldb_key = 73 and sa._mgitype_key = 30");
 
 			set.next();

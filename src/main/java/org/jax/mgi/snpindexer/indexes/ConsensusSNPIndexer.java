@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
@@ -16,7 +15,6 @@ import org.jax.mgi.snpdatamodel.AlleleSNP;
 import org.jax.mgi.snpdatamodel.ConsensusSNP;
 import org.jax.mgi.snpdatamodel.PopulationSNP;
 import org.jax.mgi.snpdatamodel.SubSNP;
-import org.jax.mgi.snpindexer.util.Timer;
 
 public class ConsensusSNPIndexer extends Indexer {
 
