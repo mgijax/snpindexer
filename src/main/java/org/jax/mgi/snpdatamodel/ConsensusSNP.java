@@ -2,12 +2,11 @@ package org.jax.mgi.snpdatamodel;
 
 import java.util.List;
 
-import javax.persistence.Transient;
-
 import org.jax.mgi.snpdatamodel.visitors.VisitorInterface;
 
 public class ConsensusSNP extends AbstractSNP {
 
+	private int consensusKey;
 	private String accid;
 	private String variationClass;
 	private String alleleSummary;
@@ -21,7 +20,12 @@ public class ConsensusSNP extends AbstractSNP {
 	private List<ConsensusCoordinateSNP> consensusCoordinates;
 	private List<AlleleSNP> alleles;
 	
-	
+	public int getConsensusKey() {
+		return consensusKey;
+	}
+	public void setConsensusKey(int consensusKey) {
+		this.consensusKey = consensusKey;
+	}
 	public String getAccid() {
 		return accid;
 	}
@@ -90,7 +94,6 @@ public class ConsensusSNP extends AbstractSNP {
 	}
 	
 	@Override
-	@Transient
 	public void Accept(VisitorInterface pi) {
 		pi.Visit(this);
 	}

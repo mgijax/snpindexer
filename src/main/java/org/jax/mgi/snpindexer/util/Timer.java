@@ -15,24 +15,26 @@ public class Timer {
 	public Timer(PrintStream out) {
 		this.out = out;
 		this.start = new Date();
-		out.println("Timer Started: " + 0);
+		StackTraceElement st = Thread.currentThread().getStackTrace()[2];
+		out.println(st.getClassName() + ":" + st.getLineNumber() + ": Timer Started: " + 0);
 	}
 
 	public Timer(Logger log) {
 		this.log = log;
 		this.start = new Date();
-		log.info("Timer Started: " + 0);
+		StackTraceElement st = Thread.currentThread().getStackTrace()[2];
+		log.info(st.getClassName() + ":" + st.getLineNumber() + ": Timer Started: " + 0);
 	}
 
+	
 	public void time() {
+		StackTraceElement st = Thread.currentThread().getStackTrace()[2];
 		Date end = new Date();
 		if(log != null) {
-			log.info("Timer from start: " + (end.getTime() - start.getTime()));
-			log.info("Timer from last: " + (end.getTime() - lastTime.getTime()));
+			log.info(st.getClassName() + ":" + st.getLineNumber() + ": Start: " + (end.getTime() - start.getTime()) + " Last: " + (end.getTime() - lastTime.getTime()));
 		}
 		if(out != null) {
-			out.println("Timer from start: " + (end.getTime() - start.getTime()));
-			out.println("Timer from last: " + (end.getTime() - lastTime.getTime()));
+			out.println(st.getClassName() + ":" + st.getLineNumber() + ": Start: " + (end.getTime() - start.getTime()) + " Last: " + (end.getTime() - lastTime.getTime()));
 		}
 		lastTime = end;
 	}

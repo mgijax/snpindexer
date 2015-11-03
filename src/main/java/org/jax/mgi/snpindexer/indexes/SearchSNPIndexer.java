@@ -78,13 +78,15 @@ public class SearchSNPIndexer extends Indexer {
 			int chunkSize = 50000;
 			int chunks = end / chunkSize;
 			
+			startProcess(chunks, chunkSize, end);
+			
 			for(int i = 0; i <= chunks; i++) {
 				int start = i * chunkSize;
-				log.info("Starting Batch: " + i + " of " + chunks);
 				runBatch(start, start + chunkSize);
-				progress(i, chunks);
-				log.info("");
+				progress(i, chunks, chunkSize);
 			}
+			
+			finishProcess(end);
 			
 			sql.cleanup();
 			
@@ -105,9 +107,6 @@ public class SearchSNPIndexer extends Indexer {
 
 	private void runBatch(int start, int end) throws SQLException {
 
-		Date startTime = new Date();
-		int diff = end - start;
-		
 		ResultSet set = sql.executeQuery("select "
 				+ "sa.accid as consensussnp_accid, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc._varclass_key, scm._fxn_key, scm._marker_key, scs._mgdstrain_key "
 				+ "from "
@@ -117,10 +116,8 @@ public class SearchSNPIndexer extends Indexer {
 				+ "sa._object_key > " + start + " and sa._object_key <= " + end);
 
 		ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
-		int counter = 0;
-		while (set.next()) {
 
-			counter++;
+		while (set.next()) {
 
 			SolrInputDocument doc = new SolrInputDocument();
 			
@@ -133,9 +130,7 @@ public class SearchSNPIndexer extends Indexer {
 			doc.addField("fxn", functionMap.get(set.getInt("_fxn_key")));
 			doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
 			doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
-		
 
-			
 			docCache.add(doc);
 			if (docCache.size() >= 10000)  {
 				addDocuments(docCache);
@@ -148,11 +143,6 @@ public class SearchSNPIndexer extends Indexer {
 		}
 		
 		set.close();
-		
-		Date endTime = new Date();
-		long time = (endTime.getTime() - startTime.getTime());
-		log.info("Batch took: " + time + "ms to process " + counter + " records at a rate of: " + (counter / time) + "r/ms");
-		
 
 	}
 }

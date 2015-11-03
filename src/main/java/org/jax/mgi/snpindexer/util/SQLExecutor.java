@@ -18,12 +18,13 @@ public class SQLExecutor {
 
 	private int	cursorSize = 0;
 	private boolean autoCommit = true;
-	private Logger log = Logger.getLogger(getClass());
+	private boolean debug = false;
+	private Logger log = Logger.getLogger(SQLExecutor.class);
 	
-	public SQLExecutor(int cursorSize, boolean autoCommit) {
+	public SQLExecutor(int cursorSize, boolean autoCommit, boolean debug) {
 		this.cursorSize  = cursorSize;
 		this.autoCommit = autoCommit;
-		
+		this.debug = debug;
 		try {
 			Class.forName(ConfigurationHelper.getDriver());
 		}
@@ -46,6 +47,7 @@ public class SQLExecutor {
 			Statement stmt = con.createStatement();
 			stmt.setFetchSize(cursorSize);
 			start = new Date();
+			if(debug) log.info("Query: " + query);
 			stmt.executeUpdate(query);
 			end = new Date();
 		} catch (Exception e) {
@@ -59,6 +61,7 @@ public class SQLExecutor {
 			initializeConnection();
 			Statement stmt = con.createStatement();
 			stmt.setFetchSize(cursorSize);
+			if(debug) log.info("Query: " + query);
 			stmt.execute(query);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -73,10 +76,12 @@ public class SQLExecutor {
 			Statement stmt = con.createStatement();
 			stmt.setFetchSize(cursorSize);
 			start = new Date();
+			if(debug) log.info("Query: " + query);
 			set = stmt.executeQuery(query);
 			end = new Date();
 			return set;
 		} catch (Exception e) {
+			e.printStackTrace();
 			log.error("DB Error: " + e.getMessage());
 			System.exit(1);
 		}

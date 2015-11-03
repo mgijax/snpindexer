@@ -2,8 +2,6 @@ package org.jax.mgi.snpdatamodel;
 
 import java.util.List;
 
-import javax.persistence.Transient;
-
 import org.jax.mgi.snpdatamodel.visitors.VisitorInterface;
 
 public class ConsensusCoordinateSNP extends AbstractSNP {
@@ -70,7 +68,6 @@ public class ConsensusCoordinateSNP extends AbstractSNP {
 	}
 	
 	@Override
-	@Transient
 	public void Accept(VisitorInterface pi) {
 		pi.Visit(this);
 	}
