@@ -80,14 +80,10 @@ public class SearchSNPIndexer extends Indexer {
 			
 			sql.cleanup();
 			
-			client.commit();
+			commit();
 			log.info("Finished SNPSearchIndexer query");
 
 		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (SolrServerException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		

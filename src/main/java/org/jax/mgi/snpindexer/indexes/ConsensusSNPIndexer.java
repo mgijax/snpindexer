@@ -74,15 +74,10 @@ public class ConsensusSNPIndexer extends Indexer {
 					docCache.add(doc);
 				}
 				addDocuments(docCache);
-
-				
-				commit();
-				System.gc();
-				
 				progress(i, chunks, chunkSize);
-
 			}
 			
+			commit();
 			finishProcess(end);
 			
 			sql.cleanup();
