@@ -33,6 +33,7 @@ public class ConfigurationHelper {
 		user = System.getProperty("PG_DBUSER");
 		password = System.getProperty("PG_DBPASS");
 		solrBaseUrl = System.getProperty("SOLR_BASEURL");
+		printProperties();
 		
 		log.info("Loading Properties via config.properties files");
 		in = SQLExecutor.class.getClassLoader().getResourceAsStream("config.properties");
@@ -52,6 +53,7 @@ public class ConfigurationHelper {
 				log.info("Error Loading config.properties file assuming defaults");
 			}
 		}
+		printProperties();
 		
 		log.info("Loading Properties via System ENV");
 		if(driver == null) driver = System.getenv("PG_DBDRIVER");
@@ -59,6 +61,8 @@ public class ConfigurationHelper {
 		if(user == null) user = System.getenv("PG_DBUSER");
 		if(password == null) password = System.getenv("PG_DBPASS");
 		if(solrBaseUrl == null) solrBaseUrl = System.getenv("SOLR_BASEURL");
+		
+		printProperties();
 		
 		log.info("Setting default values for properties that are null");
 		if(driver == null) driver = "org.postgresql.Driver";
