@@ -18,7 +18,6 @@ public abstract class Indexer extends Thread {
 	protected ConcurrentUpdateSolrClient client = null;
 	protected ConcurrentUpdateSolrClient adminClient = null;
 	
-	protected static ConfigurationHelper config; // This is a static class so the constructor gets run automatically
 	protected SQLExecutor sql = new SQLExecutor(50000, false, false);
 	protected Logger log = Logger.getLogger(getClass());
 	
@@ -91,7 +90,7 @@ public abstract class Indexer extends Thread {
 	}
 
 	protected void startProcess(int amount, int size, int total) {
-		log.info("Starting Processing: batches: " + amount + " size: " + size + " total: " + total);
+		log.info("Starting Processing: batches: " + amount + " size: " + size + " total: " + total + " at: " + startTime);
 		lastTime = new Date();
 	}
 	

@@ -63,7 +63,7 @@
 		<copy file="conf/config.properties" tofile="build/config.properties" failonerror="false" overwrite="true" />
 		<jar jarfile="dist/snpindexer.jar" basedir="build" excludes="**/*Test.class">
 			<zipgroupfileset dir="lib" />
-			<metainf dir="src/main/java/META-INF" includes="*.xml"/>
+			<!-- <metainf dir="src/main/java/META-INF" includes="*.xml"/> -->
 			<manifest>
 				<attribute name="Main-Class" value="org.jax.mgi.snpindexer.Main" />
 			</manifest>
