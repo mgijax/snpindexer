@@ -72,7 +72,37 @@ public class SearchSNPIndexer extends Indexer {
 			
 			for(int i = 0; i <= chunks; i++) {
 				int start = i * chunkSize;
-				runBatch(start, start + chunkSize);
+				
+				
+				set = sql.executeQuery("select "
+						+ "sa.accid as consensussnp_accid, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc._varclass_key, scm._fxn_key, scm._marker_key, scs._mgdstrain_key "
+						+ "from "
+						+ "snp.snp_accession sa, snp.snp_coord_cache scc, snp.snp_consensussnp_marker scm, snp.snp_consensussnp_strainallele scs "
+						+ "where "
+						+ "sa._object_key = scc._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and scc._coord_cache_key = scm._coord_cache_key and scc._consensussnp_key = scs._consensussnp_key and "
+						+ "sa._object_key > " + start + " and sa._object_key <= " + (start + chunkSize));
+
+				ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
+
+				while (set.next()) {
+
+					SolrInputDocument doc = new SolrInputDocument();
+					
+					doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
+					
+					doc.addField("chromosome", set.getString("chromosome"));
+					doc.addField("startcoordinate", set.getDouble("startcoordinate"));
+					doc.addField("ismulticoord", set.getInt("ismulticoord"));
+					doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
+					doc.addField("fxn", functionMap.get(set.getInt("_fxn_key")));
+					doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
+					doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
+
+					docCache.add(doc);
+				}
+				set.close();
+				
+				addDocuments(docCache);
 				progress(i, chunks, chunkSize);
 			}
 			
@@ -89,45 +119,4 @@ public class SearchSNPIndexer extends Indexer {
 		finish();
 	}
 
-
-	private void runBatch(int start, int end) throws SQLException {
-
-		ResultSet set = sql.executeQuery("select "
-				+ "sa.accid as consensussnp_accid, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc._varclass_key, scm._fxn_key, scm._marker_key, scs._mgdstrain_key "
-				+ "from "
-				+ "snp.snp_accession sa, snp.snp_coord_cache scc, snp.snp_consensussnp_marker scm, snp.snp_consensussnp_strainallele scs "
-				+ "where "
-				+ "sa._object_key = scc._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and scc._coord_cache_key = scm._coord_cache_key and scc._consensussnp_key = scs._consensussnp_key and "
-				+ "sa._object_key > " + start + " and sa._object_key <= " + end);
-
-		ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
-
-		while (set.next()) {
-
-			SolrInputDocument doc = new SolrInputDocument();
-			
-			doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
-			
-			doc.addField("chromosome", set.getString("chromosome"));
-			doc.addField("startcoordinate", set.getDouble("startcoordinate"));
-			doc.addField("ismulticoord", set.getInt("ismulticoord"));
-			doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
-			doc.addField("fxn", functionMap.get(set.getInt("_fxn_key")));
-			doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
-			doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
-
-			docCache.add(doc);
-			if (docCache.size() >= 10000)  {
-				addDocuments(docCache);
-				docCache.clear();
-			}
-		}
-		if(!docCache.isEmpty()) {
-			addDocuments(docCache);
-			docCache.clear();
-		}
-		
-		set.close();
-
-	}
 }
