@@ -100,9 +100,9 @@ public abstract class Indexer extends Thread {
 		if(percent > 0) {
 			int perms = (int)(diff / percent);
 			Date end = new Date(startTime.getTime() + perms);
-			log.info("Batch: " + current + " of " + total + " took: " + time + "ms to process " + size + " records at a rate of: " + (size / time) + "r/ms, Percentage complete: " + (int)(percent * 100) + "%, Estimated Finish: " + end);
+			log.info("Batch: " + current + " of " + total + " took: " + time + "ms to process " + size + " records at a rate of: " + ((size * 1000) / time) + "r/s, Percentage complete: " + (int)(percent * 100) + "%, Estimated Finish: " + end);
 		} else {
-			log.info("Batch: " + current + " of " + total + " took: " + time + "ms to process " + size + " records at a rate of: " + (size / time) + "r/ms");
+			log.info("Batch: " + current + " of " + total + " took: " + time + "ms to process " + size + " records at a rate of: " + ((size * 1000) / time) + "r/s");
 		}
 		lastTime = now;
 	}
