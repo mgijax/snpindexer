@@ -43,7 +43,7 @@ public class ConsensusSNPIndexer extends Indexer {
 			
 			int end = getMaxConsensus();
 
-			int chunkSize = 100000;
+			int chunkSize = 10000;
 			int chunks = end / chunkSize;
 			
 			startProcess(chunks, chunkSize, end);
