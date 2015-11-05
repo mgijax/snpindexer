@@ -79,8 +79,7 @@ public class SearchSNPIndexer extends Indexer {
 			finishProcess(end);
 			
 			sql.cleanup();
-			
-			commit();
+
 			log.info("Finished SNPSearchIndexer query");
 
 		} catch (SQLException e) {

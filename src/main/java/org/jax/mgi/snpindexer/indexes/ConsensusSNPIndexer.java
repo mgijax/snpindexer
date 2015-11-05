@@ -77,7 +77,6 @@ public class ConsensusSNPIndexer extends Indexer {
 				progress(i, chunks, chunkSize);
 			}
 			
-			commit();
 			finishProcess(end);
 			
 			sql.cleanup();

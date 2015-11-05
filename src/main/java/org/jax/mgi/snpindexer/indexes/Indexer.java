@@ -21,6 +21,8 @@ public abstract class Indexer extends Thread {
 	protected SQLExecutor sql = new SQLExecutor(50000, false, false);
 	protected Logger log = Logger.getLogger(getClass());
 	
+	private int commitMod = 5;
+	private int docBatchCount = 0;
 	private String coreName = "";
 	private Date startTime = new Date();
 	private Date lastTime = new Date();
@@ -33,20 +35,16 @@ public abstract class Indexer extends Thread {
 	public abstract void index();
 
 	public void addDocument(SolrInputDocument doc) {
-		try {
-			client.add(doc);
-		} catch (SolrServerException e) {
-			e.printStackTrace();
-			System.exit(1);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
+		ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
+		docs.add(doc);
+		addDocuments(docs);
 	}
 	
 	public void addDocuments(ArrayList<SolrInputDocument> docs) {
 		try {
 			client.add(docs);
+			docBatchCount++;
+			if(docBatchCount % commitMod == 0) commit();
 		} catch (SolrServerException e) {
 			e.printStackTrace();
 			System.exit(1);
