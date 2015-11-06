@@ -21,6 +21,7 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 	@Override
 	public void Visit(SubSNP subSNP) {
 		printi("SubSNP: {");
+		printiu("SubSnpKey: " + subSNP.getSubSnpKey());
 		printiu("Accid: " + subSNP.getAccid());
 		printiu("AlleleSummary: " + subSNP.getAlleleSummary());
 		printiu("Exemplar: " + subSNP.isExemplar());
@@ -28,11 +29,13 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 		printiu("SubmitterId: " + subSNP.getSubmitterId());
 		printiu("VariationClass: " + subSNP.getVariationClass());
 
-		printi("Populations: [");
-		for(PopulationSNP p: subSNP.getPopulations()) {
-			p.Accept(this);
+		if(subSNP.getPopulations() != null) {
+			printi("Populations: [");
+			for(PopulationSNP p: subSNP.getPopulations()) {
+				p.Accept(this);
+			}
+			printu("]");
 		}
-		printu("]");
 		
 		printu("}");
 	}
@@ -40,6 +43,7 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 	@Override
 	public void Visit(ConsensusSNP consensusSNP) {
 		printi("ConsensusSNP: {");
+		printiu("ConsensusKey: " + consensusSNP.getConsensusKey());
 		printiu("Accid: " + consensusSNP.getAccid());
 		printiu("Variation Class: " + consensusSNP.getVariationClass());
 		printiu("AlleleSummary: " + consensusSNP.getAlleleSummary());
@@ -48,7 +52,7 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 		printiu("BuildUpdated: " + consensusSNP.getBuildUpdated());
 		
 		printiu("Flank 5 Prime: " + consensusSNP.getFlank5Prime());
-		printiu("Flank 3 Prime: " + consensusSNP.getFlank5Prime());
+		printiu("Flank 3 Prime: " + consensusSNP.getFlank3Prime());
 		
 		
 		printi("SubSNPs: [");
@@ -57,19 +61,23 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 		}
 		printu("]");
 		
-		printi("CoordCaches: [");
-		for(ConsensusCoordinateSNP c: consensusSNP.getConsensusCoordinates()) {
-			c.Accept(this);
+		if(consensusSNP.getConsensusCoordinates() != null) {
+			printi("CoordCaches: [");
+			for(ConsensusCoordinateSNP c: consensusSNP.getConsensusCoordinates()) {
+				c.Accept(this);
+			}
+			printu("]");
 		}
-		printu("]");
 		
-		printi("Alleles: [");
-		for(AlleleSNP a: consensusSNP.getAlleles()) {
-			a.Accept(this);
+		if(consensusSNP.getAlleles() != null) {
+			printi("Alleles: [");
+			for(AlleleSNP a: consensusSNP.getAlleles()) {
+				a.Accept(this);
+			}
+			printu("]");
+			
+			printu("}");
 		}
-		printu("]");
-		
-		printu("}");
 		
 	}
 
@@ -80,11 +88,13 @@ public class PrintVisitor extends PrinterUtil implements VisitorInterface {
 		printiu("SubHandleName: " + populationSNP.getSubHandleName());
 		printiu("PopulationName: " + populationSNP.getPopulationName());
 		
-		printi("Alleles: [");
-		for(AlleleSNP a: populationSNP.getAlleles()) {
-			a.Accept(this);
+		if(populationSNP.getAlleles() != null) {
+			printi("Alleles: [");
+			for(AlleleSNP a: populationSNP.getAlleles()) {
+				a.Accept(this);
+			}
+			printu("]");
 		}
-		printu("]");
 		
 		printu("}");
 	}

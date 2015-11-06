@@ -2,12 +2,11 @@ package org.jax.mgi.snpdatamodel;
 
 import java.util.List;
 
-import javax.persistence.Transient;
-
 import org.jax.mgi.snpdatamodel.visitors.VisitorInterface;
 
 public class SubSNP extends AbstractSNP {
 	
+	private int subSnpKey;
 	private String accid;
 	private String variationClass;
 	private String alleleSummary;
@@ -18,6 +17,12 @@ public class SubSNP extends AbstractSNP {
 
 	private List<PopulationSNP> populations;
 	
+	public int getSubSnpKey() {
+		return subSnpKey;
+	}
+	public void setSubSnpKey(int subSnpKey) {
+		this.subSnpKey = subSnpKey;
+	}
 	public String getAccid() {
 		return accid;
 	}
@@ -62,7 +67,6 @@ public class SubSNP extends AbstractSNP {
 	}
 
 	@Override
-	@Transient
 	public void Accept(VisitorInterface pi) {
 		pi.Visit(this);
 	}

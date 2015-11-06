@@ -18,12 +18,14 @@ public abstract class Indexer extends Thread {
 	protected ConcurrentUpdateSolrClient client = null;
 	protected ConcurrentUpdateSolrClient adminClient = null;
 	
-	protected static ConfigurationHelper config; // This is a static class so the constructor gets run automatically
-	protected SQLExecutor sql = new SQLExecutor(50000, false);
+	protected SQLExecutor sql = new SQLExecutor(50000, false, false);
 	protected Logger log = Logger.getLogger(getClass());
 	
+	private int commitMod = 5;
+	private int docBatchCount = 0;
 	private String coreName = "";
-	private Date startTime;
+	private Date startTime = new Date();
+	private Date lastTime = new Date();
 
 	public Indexer(String coreName) {
 		this.coreName = coreName;
@@ -33,20 +35,16 @@ public abstract class Indexer extends Thread {
 	public abstract void index();
 
 	public void addDocument(SolrInputDocument doc) {
-		try {
-			client.add(doc);
-		} catch (SolrServerException e) {
-			e.printStackTrace();
-			System.exit(1);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
+		ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
+		docs.add(doc);
+		addDocuments(docs);
 	}
 	
 	public void addDocuments(ArrayList<SolrInputDocument> docs) {
 		try {
 			client.add(docs);
+			docBatchCount++;
+			if(docBatchCount % commitMod == 0) commit();
 		} catch (SolrServerException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -77,7 +75,7 @@ public abstract class Indexer extends Thread {
 	}
 	
 	public void finish() {
-		progress(100, 100);
+		progress(100, 100, 100);
 		commit();
 		client.close();
 		log.info("Indexer Finished");
@@ -88,16 +86,31 @@ public abstract class Indexer extends Thread {
 		createIndex();
 		startTime = new Date();
 	}
+
+	protected void startProcess(int amount, int size, int total) {
+		log.info("Starting Processing: batches: " + amount + " size: " + size + " total: " + total + " at: " + startTime);
+		lastTime = new Date();
+	}
 	
-	protected void progress(int current, int total) {
+	protected void progress(int current, int total, int size) {
 		double percent = ((double)current / (double)total);
 		Date now = new Date();
 		long diff = now.getTime() - startTime.getTime();
+		long time = (now.getTime() - lastTime.getTime());
 		if(percent > 0) {
 			int perms = (int)(diff / percent);
 			Date end = new Date(startTime.getTime() + perms);
-			log.info("Percentage complete: " + (int)(percent * 100) + "% Estimated Finish: " + end);
+			log.info("Batch: " + current + " of " + total + " took: " + time + "ms to process " + size + " records at a rate of: " + ((size * 1000) / time) + "r/s, Percentage complete: " + (int)(percent * 100) + "%, Estimated Finish: " + end);
+		} else {
+			log.info("Batch: " + current + " of " + total + " took: " + time + "ms to process " + size + " records at a rate of: " + ((size * 1000) / time) + "r/s");
 		}
+		lastTime = now;
+	}
+	
+	protected void finishProcess(int total) {
+		Date now = new Date();
+		long time = now.getTime() - startTime.getTime();
+		log.info("Processing finished: took: " + time + "ms to process " + total + " records at a rate of: " + (total / time) + "r/ms");
 	}
 	
 	private void createIndex() {

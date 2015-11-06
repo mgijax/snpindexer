@@ -1,8 +1,7 @@
 package org.jax.mgi.snpdatamodel;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import javax.persistence.Transient;
 
 import org.jax.mgi.snpdatamodel.visitors.VisitorInterface;
 
@@ -39,8 +38,15 @@ public class PopulationSNP extends AbstractSNP {
 	}
 	
 	@Override
-	@Transient
 	public void Accept(VisitorInterface pi) {
 		pi.Visit(this);
+	}
+	public PopulationSNP dup() {
+		PopulationSNP p = new PopulationSNP();
+		p.setAccid(accid);
+		p.setPopulationName(populationName);
+		p.setSubHandleName(subHandleName);
+		p.setAlleles(new ArrayList<AlleleSNP>());
+		return p;
 	}
 }

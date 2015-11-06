@@ -4,17 +4,13 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
-import org.apache.solr.common.util.Hash;
 
 public class SearchSNPIndexer extends Indexer {
 
-	private HashMap<Integer, String> consensusKeys = new HashMap<Integer, String>();
-	
 	private HashMap<Integer, String> variationMap = new HashMap<Integer, String>();
 	private HashMap<Integer, String> functionMap = new HashMap<Integer, String>();
 	private HashMap<Integer, String> markerAccessionMap = new HashMap<Integer, String>();
@@ -63,96 +59,64 @@ public class SearchSNPIndexer extends Indexer {
 			set.close();
 			log.info("Finished Load Marker Accession Map");
 			
-			
-			
-			
-			
-			
-
 			set = sql.executeQuery("select max(sa._object_key) as maxKey from snp.snp_accession sa where sa._logicaldb_key = 73 and sa._mgitype_key = 30");
 
 			set.next();
 			int end = set.getInt("maxKey");
 			set.close();
 
-			int chunkSize = 50000;
+			int chunkSize = 10000;
 			int chunks = end / chunkSize;
+			
+			startProcess(chunks, chunkSize, end);
 			
 			for(int i = 0; i <= chunks; i++) {
 				int start = i * chunkSize;
-				log.info("Starting Batch: " + i + " of " + chunks);
-				runBatch(start, start + chunkSize);
-				progress(i, chunks);
-				log.info("");
+				
+				
+				set = sql.executeQuery("select "
+						+ "sa.accid as consensussnp_accid, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc._varclass_key, scm._fxn_key, scm._marker_key, scs._mgdstrain_key "
+						+ "from "
+						+ "snp.snp_accession sa, snp.snp_coord_cache scc, snp.snp_consensussnp_marker scm, snp.snp_consensussnp_strainallele scs "
+						+ "where "
+						+ "sa._object_key = scc._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and scc._coord_cache_key = scm._coord_cache_key and scc._consensussnp_key = scs._consensussnp_key and "
+						+ "sa._object_key > " + start + " and sa._object_key <= " + (start + chunkSize));
+
+				ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
+
+				while (set.next()) {
+
+					SolrInputDocument doc = new SolrInputDocument();
+					
+					doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
+					
+					doc.addField("chromosome", set.getString("chromosome"));
+					doc.addField("startcoordinate", set.getDouble("startcoordinate"));
+					doc.addField("ismulticoord", set.getInt("ismulticoord"));
+					doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
+					doc.addField("fxn", functionMap.get(set.getInt("_fxn_key")));
+					doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
+					doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
+
+					docCache.add(doc);
+				}
+				set.close();
+				
+				addDocuments(docCache);
+				progress(i, chunks, chunkSize);
 			}
 			
-			sql.cleanup();
+			finishProcess(end);
 			
-			client.commit();
+			sql.cleanup();
+
 			log.info("Finished SNPSearchIndexer query");
 
 		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (SolrServerException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
 		finish();
 	}
 
-
-	private void runBatch(int start, int end) throws SQLException {
-
-		Date startTime = new Date();
-		int diff = end - start;
-		
-		ResultSet set = sql.executeQuery("select "
-				+ "sa.accid as consensussnp_accid, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc._varclass_key, scm._fxn_key, scm._marker_key, scs._mgdstrain_key "
-				+ "from "
-				+ "snp.snp_accession sa, snp.snp_coord_cache scc, snp.snp_consensussnp_marker scm, snp.snp_consensussnp_strainallele scs "
-				+ "where "
-				+ "sa._object_key = scc._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and scc._coord_cache_key = scm._coord_cache_key and scc._consensussnp_key = scs._consensussnp_key and "
-				+ "sa._object_key > " + start + " and sa._object_key <= " + end);
-
-		ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
-		int counter = 0;
-		while (set.next()) {
-
-			counter++;
-
-			SolrInputDocument doc = new SolrInputDocument();
-			
-			doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
-			
-			doc.addField("chromosome", set.getString("chromosome"));
-			doc.addField("startcoordinate", set.getDouble("startcoordinate"));
-			doc.addField("ismulticoord", set.getInt("ismulticoord"));
-			doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
-			doc.addField("fxn", functionMap.get(set.getInt("_fxn_key")));
-			doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
-			doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
-		
-
-			
-			docCache.add(doc);
-			if (docCache.size() >= 10000)  {
-				addDocuments(docCache);
-				docCache.clear();
-			}
-		}
-		if(!docCache.isEmpty()) {
-			addDocuments(docCache);
-			docCache.clear();
-		}
-		
-		set.close();
-		
-		Date endTime = new Date();
-		long time = (endTime.getTime() - startTime.getTime());
-		log.info("Batch took: " + time + "ms to process " + counter + " records at a rate of: " + (counter / time) + "r/ms");
-		
-
-	}
 }
