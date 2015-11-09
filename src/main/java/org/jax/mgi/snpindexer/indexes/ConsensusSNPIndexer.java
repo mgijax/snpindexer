@@ -21,6 +21,8 @@ import org.jax.mgi.snpdatamodel.SubSNP;
 public class ConsensusSNPIndexer extends Indexer {
 
 	private HashMap<Integer, String> strains = null;
+	private HashMap<Integer, String> proteins = null;
+	private HashMap<Integer, String> transcripts = null;
 	private HashMap<Integer, PopulationSNP> populations = null;
 	private ObjectMapper mapper = new ObjectMapper();
 	
@@ -29,6 +31,8 @@ public class ConsensusSNPIndexer extends Indexer {
 		try {
 			setupStrains();
 			setupPopulations();
+			setupTranscripts();
+			setupProteins();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -43,7 +47,7 @@ public class ConsensusSNPIndexer extends Indexer {
 			
 			int end = getMaxConsensus();
 
-			int chunkSize = 10000;
+			int chunkSize = 40000;
 			int chunks = end / chunkSize;
 			
 			startProcess(chunks, chunkSize, end);
@@ -220,10 +224,8 @@ public class ConsensusSNPIndexer extends Indexer {
 	
 	private void populateConsensusMarkers(HashMap<Integer, ConsensusCoordinateSNP> coords, int start, int end) throws SQLException {
 		
-		ResultSet set = sql.executeQuery("select scm._coord_cache_key, scm._consensussnp_key, a.accid, m.symbol, m.name, vt.term, sa1.accid as transcript, sa2.accid as protein, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame "
+		ResultSet set = sql.executeQuery("select scm._coord_cache_key, scm._consensussnp_key, a.accid, m.symbol, m.name, vt.term, scm._consensussnp_marker_key, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame "
 				+ "from mgd.voc_term vt, mgd.acc_accession a, mgd.mrk_marker m, snp.snp_consensussnp_marker scm "
-				+ "left join snp.snp_accession sa1 on sa1._object_key = scm._consensussnp_marker_key and sa1._logicaldb_key = 27 and sa1._mgitype_key = 32 and sa1.prefixpart = 'NM_' "
-				+ "left join snp.snp_accession sa2 on sa2._object_key = scm._consensussnp_marker_key and sa2._logicaldb_key = 27 and sa2._mgitype_key = 32 and sa2.prefixpart = 'NP_' "
 				+ "where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " and scm._fxn_key = vt._term_key and a._object_key = scm._marker_key and "
 						+ "a._logicaldb_key = 1 and a._mgitype_key = 2 and a.preferred = 1 and scm._marker_key = m._marker_key order by scm._consensussnp_key, scm._coord_cache_key");
 
@@ -234,11 +236,14 @@ public class ConsensusSNPIndexer extends Indexer {
 			c.setContigAllele(set.getString("contig_allele"));
 			c.setFunctionClass(set.getString("term"));
 			c.setName(set.getString("name"));
-			c.setProtein(set.getString("protein"));
+
 			c.setReadingFrame(set.getString("reading_frame"));
 			c.setResidue(set.getString("residue"));
 			c.setSymbol(set.getString("symbol"));
-			c.setTranscript(set.getString("transcript"));
+			
+			c.setProtein(proteins.get(set.getInt("_consensussnp_marker_key")));
+			c.setTranscript(transcripts.get(set.getInt("_consensussnp_marker_key")));
+			
 			
 			coords.get(set.getInt("_coord_cache_key")).getMarkers().add(c);
 		}
@@ -279,6 +284,30 @@ public class ConsensusSNPIndexer extends Indexer {
 			ResultSet set = sql.executeQuery("select * from snp.snp_strain");
 			while(set.next()) {
 				strains.put(set.getInt("_mgdstrain_key"), set.getString("strain"));
+			}
+			set.close();
+		}
+	}
+	
+	private void setupTranscripts() throws SQLException {
+		if(transcripts == null) {
+			transcripts = new HashMap<Integer, String>();
+			
+			ResultSet set = sql.executeQuery("select _object_key, accid from snp.snp_accession where _logicaldb_key = 27 and _mgitype_key = 32 and prefixpart = 'NM_'");
+			while(set.next()) {
+				transcripts.put(set.getInt("_object_key"), set.getString("accid"));
+			}
+			set.close();
+		}
+	}
+	
+	private void setupProteins() throws SQLException {
+		if(proteins == null) {
+			proteins = new HashMap<Integer, String>();
+			
+			ResultSet set = sql.executeQuery("select _object_key, accid from snp.snp_accession where _logicaldb_key = 27 and _mgitype_key = 32 and prefixpart = 'NP_'");
+			while(set.next()) {
+				proteins.put(set.getInt("_object_key"), set.getString("accid"));
 			}
 			set.close();
 		}
