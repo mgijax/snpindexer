@@ -18,7 +18,7 @@ public abstract class Indexer extends Thread {
 	protected ConcurrentUpdateSolrClient client = null;
 	protected ConcurrentUpdateSolrClient adminClient = null;
 	
-	protected SQLExecutor sql = new SQLExecutor(50000, false, false);
+	protected SQLExecutor sql = new SQLExecutor(50000, false);
 	protected Logger log = Logger.getLogger(getClass());
 	
 	private int commitMod = 5;

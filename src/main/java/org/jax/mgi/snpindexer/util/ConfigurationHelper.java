@@ -15,6 +15,7 @@ public class ConfigurationHelper {
 	private static String user = null;
 	private static String password = null;
 	private static String solrBaseUrl = null;
+	private static boolean debug = false;
 	private static Logger log;
 	
 	public static void init() {
@@ -33,6 +34,7 @@ public class ConfigurationHelper {
 		user = System.getProperty("PG_DBUSER");
 		password = System.getProperty("PG_DBPASS");
 		solrBaseUrl = System.getProperty("SOLR_BASEURL");
+		debug = "true".equals(System.getProperty("DEBUG"));
 		printProperties();
 		
 		log.info("Loading Properties via config.properties files");
@@ -48,6 +50,7 @@ public class ConfigurationHelper {
 				if(user == null) user = configurationProperties.getProperty("user");
 				if(password == null) password = configurationProperties.getProperty("password");
 				if(solrBaseUrl == null) solrBaseUrl = configurationProperties.getProperty("solrBaseUrl");
+				if(!debug) debug = "true".equals(configurationProperties.getProperty("debug"));
 			} catch (IOException e) {
 				log.info("Error: " + e.getMessage());
 				log.info("Error Loading config.properties file assuming defaults");
@@ -61,7 +64,7 @@ public class ConfigurationHelper {
 		if(user == null) user = System.getenv("PG_DBUSER");
 		if(password == null) password = System.getenv("PG_DBPASS");
 		if(solrBaseUrl == null) solrBaseUrl = System.getenv("SOLR_BASEURL");
-		
+		if(!debug) debug = "true".equals(System.getenv("DEBUG"));
 		printProperties();
 		
 		log.info("Setting default values for properties that are null");
@@ -70,7 +73,6 @@ public class ConfigurationHelper {
 		if(user == null) user = "mgd_public";
 		if(password == null) password = "mgdpub";
 		if(solrBaseUrl == null) solrBaseUrl = "http://localhost.jax.org:8983/solr";
-		
 		printProperties();
 		
 	}
@@ -82,6 +84,7 @@ public class ConfigurationHelper {
 		log.info("\tuser: " + user);
 		log.info("\tpassword: " + password);
 		log.info("\tsolrBaseUrl: " + solrBaseUrl);
+		log.info("\tdebug: " + debug);
 	}
 
 	public static String getDriver() {
@@ -98,5 +101,8 @@ public class ConfigurationHelper {
 	}
 	public static String getSolrBaseUrl() {
 		return solrBaseUrl;
+	}
+	public static boolean isDebug() {
+		return debug;
 	}
 }

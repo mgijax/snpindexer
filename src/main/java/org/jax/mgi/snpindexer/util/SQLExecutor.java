@@ -21,10 +21,10 @@ public class SQLExecutor {
 	private boolean debug = false;
 	private Logger log = Logger.getLogger(SQLExecutor.class);
 	
-	public SQLExecutor(int cursorSize, boolean autoCommit, boolean debug) {
+	public SQLExecutor(int cursorSize, boolean autoCommit) {
 		this.cursorSize  = cursorSize;
 		this.autoCommit = autoCommit;
-		this.debug = debug;
+		this.debug = ConfigurationHelper.isDebug();
 		try {
 			Class.forName(ConfigurationHelper.getDriver());
 		}
@@ -46,10 +46,9 @@ public class SQLExecutor {
 			initializeConnection();
 			Statement stmt = con.createStatement();
 			stmt.setFetchSize(cursorSize);
-			start = new Date();
-			if(debug) log.info("Query: " + query);
+			startQuery(query);
 			stmt.executeUpdate(query);
-			end = new Date();
+			endQuery();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -61,8 +60,9 @@ public class SQLExecutor {
 			initializeConnection();
 			Statement stmt = con.createStatement();
 			stmt.setFetchSize(cursorSize);
-			if(debug) log.info("Query: " + query);
+			startQuery(query);
 			stmt.execute(query);
+			endQuery();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -75,10 +75,9 @@ public class SQLExecutor {
 		try {
 			Statement stmt = con.createStatement();
 			stmt.setFetchSize(cursorSize);
-			start = new Date();
-			if(debug) log.info("Query: " + query);
+			startQuery(query);
 			set = stmt.executeQuery(query);
-			end = new Date();
+			endQuery();
 			return set;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -102,8 +101,18 @@ public class SQLExecutor {
 		}
 	}
 
-	public long getTiming() {
-		return end.getTime() - start.getTime();
+	public void startQuery(String query) {
+		if(debug) {
+			log.info("Running Query: " + query);
+			start = new Date();
+		}
+	}
+	
+	public void endQuery() {
+		if(debug) {
+			end = new Date();
+			log.info("Query took: " + (end.getTime() - start.getTime()) + "ms to run");
+		}
 	}
 
 	@Override
