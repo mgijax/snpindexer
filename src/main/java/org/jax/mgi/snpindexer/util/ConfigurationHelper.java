@@ -16,6 +16,7 @@ public class ConfigurationHelper {
 	private static String password = null;
 	private static String solrBaseUrl = null;
 	private static boolean debug = false;
+	private static boolean threaded = false;
 	private static Logger log;
 	
 	public static void init() {
@@ -35,6 +36,7 @@ public class ConfigurationHelper {
 		password = System.getProperty("PG_DBPASS");
 		solrBaseUrl = System.getProperty("SOLR_BASEURL");
 		debug = "true".equals(System.getProperty("DEBUG"));
+		threaded = "true".equals(System.getProperty("THREADED"));
 		printProperties();
 		
 		log.info("Loading Properties via config.properties files");
@@ -51,6 +53,7 @@ public class ConfigurationHelper {
 				if(password == null) password = configurationProperties.getProperty("password");
 				if(solrBaseUrl == null) solrBaseUrl = configurationProperties.getProperty("solrBaseUrl");
 				if(!debug) debug = "true".equals(configurationProperties.getProperty("debug"));
+				if(!threaded) threaded = "true".equals(configurationProperties.getProperty("threaded"));
 			} catch (IOException e) {
 				log.info("Error: " + e.getMessage());
 				log.info("Error Loading config.properties file assuming defaults");
@@ -65,6 +68,7 @@ public class ConfigurationHelper {
 		if(password == null) password = System.getenv("PG_DBPASS");
 		if(solrBaseUrl == null) solrBaseUrl = System.getenv("SOLR_BASEURL");
 		if(!debug) debug = "true".equals(System.getenv("DEBUG"));
+		if(!threaded) threaded = "true".equals(System.getenv("THREADED"));
 		printProperties();
 		
 		log.info("Setting default values for properties that are null");
@@ -85,6 +89,7 @@ public class ConfigurationHelper {
 		log.info("\tpassword: " + password);
 		log.info("\tsolrBaseUrl: " + solrBaseUrl);
 		log.info("\tdebug: " + debug);
+		log.info("\threaded: " + threaded);
 	}
 
 	public static String getDriver() {
@@ -104,5 +109,8 @@ public class ConfigurationHelper {
 	}
 	public static boolean isDebug() {
 		return debug;
+	}
+	public static boolean isThreaded() {
+		return threaded;
 	}
 }

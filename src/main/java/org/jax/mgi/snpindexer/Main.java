@@ -19,7 +19,7 @@ public class Main {
 		
 		HashMap<String, Indexer> indexers = new HashMap<String, Indexer>();
 
-		boolean threaded = false;
+		boolean threaded = ConfigurationHelper.isThreaded();
 		log.info("Start Time: " + new Date());
 		
 		try {
