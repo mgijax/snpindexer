@@ -62,7 +62,7 @@
        persistent, and doesn't work with replication.
     -->
   <directoryFactory name="DirectoryFactory" 
-                    class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}">
+                    class="${solr.directoryFactory:solr.SimpleFSDirectoryFactory}">
   </directoryFactory> 
 
   <!-- The CodecFactory for defining the format of the inverted index.
