@@ -24,26 +24,28 @@ public class ConsensusSNPIndexer extends Indexer {
 	private HashMap<Integer, String> proteins = null;
 	private HashMap<Integer, String> transcripts = null;
 	private HashMap<Integer, PopulationSNP> populations = null;
+	
+	private HashMap<Integer, String> functionClasses = null;
+	private HashMap<Integer, String> variationClasses = null;
+	
 	private ObjectMapper mapper = new ObjectMapper();
 	
 	public ConsensusSNPIndexer(String coreName) {
 		super(coreName);
-		try {
-			setupStrains();
-			setupPopulations();
-			setupTranscripts();
-			setupProteins();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
 	}
 
 	@Override
 	public void index() {
-		
 		resetIndex();
-		
+	
 		try {
+			
+			setupStrains();
+			setupPopulations();
+			setupTranscripts();
+			setupProteins();
+			setupFunctionClasses();
+			setupVariationClasses();
 			
 			int end = getMaxConsensus();
 
@@ -98,14 +100,16 @@ public class ConsensusSNPIndexer extends Indexer {
 
 		HashMap<Integer, ConsensusSNP> ret = new HashMap<Integer, ConsensusSNP>();
 
-		ResultSet set = sql.executeQuery("select scs._consensussnp_key, sa.accid, vt.term, scs.allelesummary, scs.iupaccode, scs.buildcreated, scs.buildupdated from snp.snp_accession sa, snp.snp_consensussnp scs, mgd.voc_term vt where sa._logicaldb_key = 73 and sa._mgitype_key = 30 and scs._consensussnp_key > " + start + " and scs._consensussnp_key <= " + end + " and scs._consensussnp_key = sa._object_key and scs._varclass_key = vt._term_key");
+		ResultSet set = sql.executeQuery("select scs._consensussnp_key, sa.accid, scs._varclass_key, scs.allelesummary, scs.iupaccode, scs.buildcreated, scs.buildupdated "
+				+ "from snp.snp_accession sa, snp.snp_consensussnp scs where sa._logicaldb_key = 73 and sa._mgitype_key = 30 and "
+				+ "scs._consensussnp_key > " + start + " and scs._consensussnp_key <= " + end + " and scs._consensussnp_key = sa._object_key");
 
 		while(set.next()) {
 			ConsensusSNP snp = new ConsensusSNP();
 			
 			snp.setConsensusKey(set.getInt("_consensussnp_key"));
 			snp.setAccid(set.getString("accid"));
-			snp.setVariationClass(set.getString("term"));
+			snp.setVariationClass(variationClasses.get(set.getInt("_varclass_key")));
 			snp.setAlleleSummary(set.getString("allelesummary"));
 			snp.setIupaccode(set.getString("iupaccode"));
 			snp.setBuildCreated(set.getString("buildcreated"));
@@ -135,9 +139,9 @@ public class ConsensusSNPIndexer extends Indexer {
 		
 		ResultSet set;
 		if(is5Prime) {
-			set = sql.executeQuery("select * from snp.snp_flank where _consensussnp_key > " + start + " and _consensussnp_key <= " + end + " and is5prime = 1 order by sequencenum");
+			set = sql.executeQuery("select * from snp.snp_flank where _consensussnp_key > " + start + " and _consensussnp_key <= " + end + " and is5prime = 1 order by _consensussnp_key, sequencenum");
 		} else {
-			set = sql.executeQuery("select * from snp.snp_flank where _consensussnp_key > " + start + " and _consensussnp_key <= " + end + " and is5prime = 0 order by sequencenum");
+			set = sql.executeQuery("select * from snp.snp_flank where _consensussnp_key > " + start + " and _consensussnp_key <= " + end + " and is5prime = 0 order by _consensussnp_key, sequencenum");
 		}
 		
 		while(set.next()) {
@@ -161,7 +165,10 @@ public class ConsensusSNPIndexer extends Indexer {
 
 	private void populateSubSnps(HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
 
-		ResultSet set = sql.executeQuery("select sss._subsnp_key, sss._consensussnp_key, sa.accid, sss.allelesummary, sss.isexemplar, sss.orientation, vt1.term as varclass, sa2.accid as submitter from snp.snp_subsnp sss, snp.snp_accession sa, snp.snp_accession sa2, mgd.voc_term vt1 where sss._subsnp_key = sa._object_key and sss._consensussnp_key > " + start + " and sss._consensussnp_key <= " + end + " and sa._logicaldb_key = 74 and sa._mgitype_key = 31 and sss._varclass_key = vt1._term_key and sss._subsnp_key = sa2._object_key and sa2._logicaldb_key = 75 and sa2._mgitype_key = 31");
+		ResultSet set = sql.executeQuery("select sss._subsnp_key, sss._consensussnp_key, sa.accid, sss.allelesummary, sss.isexemplar, sss.orientation, sss._varclass_key, "
+				+ "sa2.accid as submitter from snp.snp_subsnp sss, snp.snp_accession sa, snp.snp_accession sa2 where sss._subsnp_key = sa._object_key "
+				+ "and sss._consensussnp_key > " + start + " and sss._consensussnp_key <= " + end + " and sa._logicaldb_key = 74 and sa._mgitype_key = 31 and "
+						+ "sss._subsnp_key = sa2._object_key and sa2._logicaldb_key = 75 and sa2._mgitype_key = 31");
 
 		HashMap<Integer, SubSNP> snps = new HashMap<Integer, SubSNP>();
 		
@@ -173,7 +180,7 @@ public class ConsensusSNPIndexer extends Indexer {
 			snp.setExemplar(set.getInt("isexemplar") == 1);
 			snp.setOrientation(set.getString("orientation"));
 			snp.setSubmitterId(set.getString("submitter"));
-			snp.setVariationClass(set.getString("varclass"));
+			snp.setVariationClass(variationClasses.get(set.getInt("_varclass_key")));
 			snp.setPopulations(new ArrayList<PopulationSNP>());
 			snps.put(set.getInt("_subsnp_key"), snp);
 
@@ -185,7 +192,7 @@ public class ConsensusSNPIndexer extends Indexer {
 	}
 	
 	private void populateConsensusAlleles(HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
-		ResultSet set = sql.executeQuery("select ssca._consensussnp_key, ssca._mgdstrain_key, ssca.isconflict, ssca.allele from snp.snp_consensussnp_strainallele ssca where ssca._consensussnp_key > " + start + " and ssca._consensussnp_key <= " + end + " order by ssca._consensussnp_key, ssca._mgdstrain_key");
+		ResultSet set = sql.executeQuery("select ssca._consensussnp_key, ssca._mgdstrain_key, ssca.isconflict, ssca.allele from snp.snp_consensussnp_strainallele ssca where ssca._consensussnp_key > " + start + " and ssca._consensussnp_key <= " + end);
 		while(set.next()) {
 			AlleleSNP a = new AlleleSNP();
 			a.setAllele(set.getString("allele"));
@@ -200,7 +207,8 @@ public class ConsensusSNPIndexer extends Indexer {
 		
 		HashMap<Integer, ConsensusCoordinateSNP> coords = new HashMap<Integer, ConsensusCoordinateSNP>();
 		
-		ResultSet set = sql.executeQuery("select scc._coord_cache_key, scc._consensussnp_key, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc.strand, vt.term, scc.allelesummary, scc.iupaccode from snp.snp_coord_cache scc, mgd.voc_term vt where scc._consensussnp_key > " + start + " and scc._consensussnp_key <= " + end + " and scc._varclass_key = vt._term_key order by scc._coord_cache_key");
+		ResultSet set = sql.executeQuery("select scc._coord_cache_key, scc._consensussnp_key, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc.strand, scc._varclass_key, "
+				+ "scc.allelesummary, scc.iupaccode from snp.snp_coord_cache scc where scc._consensussnp_key > " + start + " and scc._consensussnp_key <= " + end);
 		
 		while(set.next()) {
 			ConsensusCoordinateSNP c = new ConsensusCoordinateSNP();
@@ -210,7 +218,7 @@ public class ConsensusSNPIndexer extends Indexer {
 			c.setMultiCoord(set.getInt("ismulticoord") == 1);
 			c.setStartCoordinate(set.getDouble("startcoordinate"));
 			c.setStrand(set.getString("strand"));
-			c.setVariationClass(set.getString("term"));
+			c.setVariationClass(variationClasses.get(set.getInt("_varclass_key")));
 			
 			c.setMarkers(new ArrayList<ConsensusMarkerSNP>());
 			consensusSnps.get(set.getInt("_consensussnp_key")).getConsensusCoordinates().add(c);
@@ -224,26 +232,24 @@ public class ConsensusSNPIndexer extends Indexer {
 	
 	private void populateConsensusMarkers(HashMap<Integer, ConsensusCoordinateSNP> coords, int start, int end) throws SQLException {
 		
-		ResultSet set = sql.executeQuery("select scm._coord_cache_key, scm._consensussnp_key, a.accid, m.symbol, m.name, vt.term, scm._consensussnp_marker_key, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame "
-				+ "from mgd.voc_term vt, mgd.acc_accession a, mgd.mrk_marker m, snp.snp_consensussnp_marker scm "
-				+ "where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " and scm._fxn_key = vt._term_key and a._object_key = scm._marker_key and "
-						+ "a._logicaldb_key = 1 and a._mgitype_key = 2 and a.preferred = 1 and scm._marker_key = m._marker_key order by scm._consensussnp_key, scm._coord_cache_key");
+		ResultSet set = sql.executeQuery("select scm._coord_cache_key, scm._consensussnp_key, a.accid, m.symbol, m.name, scm._fxn_key, scm._consensussnp_marker_key, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame "
+				+ "from mgd.acc_accession a, mgd.mrk_marker m, snp.snp_consensussnp_marker scm "
+				+ "where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " and a._object_key = scm._marker_key and "
+						+ "a._logicaldb_key = 1 and a._mgitype_key = 2 and a.preferred = 1 and scm._marker_key = m._marker_key");
 
 		while(set.next()) {
 			ConsensusMarkerSNP c = new ConsensusMarkerSNP();
 			c.setAaPosition(set.getString("aa_position"));
 			c.setAccid(set.getString("accid"));
 			c.setContigAllele(set.getString("contig_allele"));
-			c.setFunctionClass(set.getString("term"));
 			c.setName(set.getString("name"));
-
 			c.setReadingFrame(set.getString("reading_frame"));
 			c.setResidue(set.getString("residue"));
 			c.setSymbol(set.getString("symbol"));
 			
+			c.setFunctionClass(functionClasses.get(set.getInt("_fxn_key")));
 			c.setProtein(proteins.get(set.getInt("_consensussnp_marker_key")));
 			c.setTranscript(transcripts.get(set.getInt("_consensussnp_marker_key")));
-			
 			
 			coords.get(set.getInt("_coord_cache_key")).getMarkers().add(c);
 		}
@@ -308,6 +314,30 @@ public class ConsensusSNPIndexer extends Indexer {
 			ResultSet set = sql.executeQuery("select _object_key, accid from snp.snp_accession where _logicaldb_key = 27 and _mgitype_key = 32 and prefixpart = 'NP_'");
 			while(set.next()) {
 				proteins.put(set.getInt("_object_key"), set.getString("accid"));
+			}
+			set.close();
+		}
+	}
+	
+	private void setupFunctionClasses() throws SQLException {
+		if(functionClasses == null) {
+			functionClasses = new HashMap<Integer, String>();
+			
+			ResultSet set = sql.executeQuery("select _term_key, term from mgd.voc_term where _vocab_key = 49");
+			while(set.next()) {
+				functionClasses.put(set.getInt("_term_key"), set.getString("term"));
+			}
+			set.close();
+		}
+	}
+	
+	private void setupVariationClasses() throws SQLException {
+		if(variationClasses == null) {
+			variationClasses = new HashMap<Integer, String>();
+			
+			ResultSet set = sql.executeQuery("select _term_key, term from mgd.voc_term where _vocab_key = 50");
+			while(set.next()) {
+				variationClasses.put(set.getInt("_term_key"), set.getString("term"));
 			}
 			set.close();
 		}
