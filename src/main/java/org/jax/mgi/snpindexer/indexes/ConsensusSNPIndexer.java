@@ -11,6 +11,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.jax.mgi.snpdatamodel.AlleleSNP;
 import org.jax.mgi.snpdatamodel.ConsensusCoordinateSNP;
 import org.jax.mgi.snpdatamodel.ConsensusMarkerSNP;
@@ -32,6 +33,7 @@ public class ConsensusSNPIndexer extends Indexer {
 	
 	public ConsensusSNPIndexer(String coreName) {
 		super(coreName);
+		mapper.setSerializationInclusion(Inclusion.NON_NULL);
 	}
 
 	@Override
@@ -97,7 +99,7 @@ public class ConsensusSNPIndexer extends Indexer {
 
 
 	public HashMap<Integer, ConsensusSNP> getConsensusSNP(int start, int end) throws SQLException {
-
+	
 		HashMap<Integer, ConsensusSNP> ret = new HashMap<Integer, ConsensusSNP>();
 
 		ResultSet set = sql.executeQuery("select scs._consensussnp_key, sa.accid, scs._varclass_key, scs.allelesummary, scs.iupaccode, scs.buildcreated, scs.buildupdated "
@@ -164,7 +166,6 @@ public class ConsensusSNPIndexer extends Indexer {
 	}
 
 	private void populateSubSnps(HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
-
 		ResultSet set = sql.executeQuery("select sss._subsnp_key, sss._consensussnp_key, sa.accid, sss.allelesummary, sss.isexemplar, sss.orientation, sss._varclass_key, "
 				+ "sa2.accid as submitter from snp.snp_subsnp sss, snp.snp_accession sa, snp.snp_accession sa2 where sss._subsnp_key = sa._object_key "
 				+ "and sss._consensussnp_key > " + start + " and sss._consensussnp_key <= " + end + " and sa._logicaldb_key = 74 and sa._mgitype_key = 31 and "
@@ -204,7 +205,6 @@ public class ConsensusSNPIndexer extends Indexer {
 	}
 	
 	private void populateCoordinateCache(HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
-		
 		HashMap<Integer, ConsensusCoordinateSNP> coords = new HashMap<Integer, ConsensusCoordinateSNP>();
 		
 		ResultSet set = sql.executeQuery("select scc._coord_cache_key, scc._consensussnp_key, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc.strand, scc._varclass_key, "
@@ -231,7 +231,6 @@ public class ConsensusSNPIndexer extends Indexer {
 	}
 	
 	private void populateConsensusMarkers(HashMap<Integer, ConsensusCoordinateSNP> coords, int start, int end) throws SQLException {
-		
 		ResultSet set = sql.executeQuery("select scm._coord_cache_key, scm._consensussnp_key, a.accid, m.symbol, m.name, scm._fxn_key, scm._consensussnp_marker_key, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame "
 				+ "from mgd.acc_accession a, mgd.mrk_marker m, snp.snp_consensussnp_marker scm "
 				+ "where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " and a._object_key = scm._marker_key and "
@@ -258,13 +257,12 @@ public class ConsensusSNPIndexer extends Indexer {
 	}
 
 	private void populatePopulations(HashMap<Integer, SubSNP> snps, int start, int end) throws SQLException {
-		
 		ResultSet set = sql.executeQuery("select ssa._subsnp_key, ssa._population_key, ssa._mgdstrain_key, ssa.allele from snp.snp_subsnp sss, snp.snp_subsnp_strainallele ssa where sss._consensussnp_key > " + start + " and sss._consensussnp_key <= " + end + " and sss._subsnp_key = ssa._subsnp_key order by ssa._subsnp_key, ssa._population_key");
 	
 		int lastPopulation = 0;
 		int lastSubSnp = 0;
 		PopulationSNP p = null;
-		
+
 		while(set.next()) {
 			if(lastPopulation != set.getInt("_population_key") || lastSubSnp != set.getInt("_subsnp_key")) {
 				p = populations.get(set.getInt("_population_key")).dup();
