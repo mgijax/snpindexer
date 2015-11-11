@@ -21,11 +21,15 @@ public abstract class Indexer extends Thread {
 	protected SQLExecutor sql = new SQLExecutor(50000, false);
 	protected Logger log = Logger.getLogger(getClass());
 	
-	private int commitMod = 5;
-	private int docBatchCount = 0;
+	// Minutes between commits
+	private int miuntes = 2;
+	// Milliseconds till next commit
+	private int commitFreq = 1000 * 60 * miuntes;
+	
 	private String coreName = "";
 	private Date startTime = new Date();
 	private Date lastTime = new Date();
+	private Date lastDocTime = new Date();
 
 	public Indexer(String coreName) {
 		this.coreName = coreName;
@@ -43,8 +47,12 @@ public abstract class Indexer extends Thread {
 	public void addDocuments(ArrayList<SolrInputDocument> docs) {
 		try {
 			client.add(docs);
-			docBatchCount++;
-			if(docBatchCount % commitMod == 0) commit();
+			Date now = new Date();
+			if(now.getTime() - lastDocTime.getTime() > commitFreq) {
+				log.info("Commit timeout: " + (now.getTime() - lastDocTime.getTime()) + " running commit on current documents");
+				commit();
+				lastDocTime = now;
+			}
 		} catch (SolrServerException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -75,7 +83,6 @@ public abstract class Indexer extends Thread {
 	}
 	
 	public void finish() {
-		progress(100, 100, 100);
 		commit();
 		client.close();
 		log.info("Indexer Finished");
