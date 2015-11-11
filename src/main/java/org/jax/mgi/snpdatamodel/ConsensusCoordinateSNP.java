@@ -7,7 +7,7 @@ import org.jax.mgi.snpdatamodel.visitors.VisitorInterface;
 public class ConsensusCoordinateSNP extends AbstractSNP {
 	
 	private String chromosome;
-	private Double startCoordinate;
+	private int startCoordinate;
 	private boolean multiCoord;
 	private String strand;
 
@@ -24,10 +24,10 @@ public class ConsensusCoordinateSNP extends AbstractSNP {
 	public void setChromosome(String chromosome) {
 		this.chromosome = chromosome;
 	}
-	public Double getStartCoordinate() {
+	public int getStartCoordinate() {
 		return startCoordinate;
 	}
-	public void setStartCoordinate(Double startCoordinate) {
+	public void setStartCoordinate(int startCoordinate) {
 		this.startCoordinate = startCoordinate;
 	}
 	public boolean isMultiCoord() {
