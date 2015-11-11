@@ -1,8 +1,11 @@
 package org.jax.mgi.snpindexer.indexes;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
@@ -17,15 +20,15 @@ public abstract class Indexer extends Thread {
 
 	protected ConcurrentUpdateSolrClient client = null;
 	protected ConcurrentUpdateSolrClient adminClient = null;
-	
+
 	protected SQLExecutor sql = new SQLExecutor(50000, false);
 	protected Logger log = Logger.getLogger(getClass());
-	
+
 	// Minutes between commits
 	private int miuntes = 2;
 	// Milliseconds till next commit
 	private int commitFreq = 1000 * 60 * miuntes;
-	
+
 	private String coreName = "";
 	private Date startTime = new Date();
 	private Date lastTime = new Date();
@@ -43,7 +46,7 @@ public abstract class Indexer extends Thread {
 		docs.add(doc);
 		addDocuments(docs);
 	}
-	
+
 	public void addDocuments(ArrayList<SolrInputDocument> docs) {
 		try {
 			client.add(docs);
@@ -61,7 +64,7 @@ public abstract class Indexer extends Thread {
 			System.exit(1);
 		}
 	}
-	
+
 	public void commit() {
 		try {
 			client.commit();
@@ -81,13 +84,13 @@ public abstract class Indexer extends Thread {
 			System.exit(1);
 		}
 	}
-	
+
 	public void finish() {
 		commit();
 		client.close();
 		log.info("Indexer Finished");
 	}
-	
+
 	public void resetIndex() {
 		deleteIndex();
 		createIndex();
@@ -98,7 +101,7 @@ public abstract class Indexer extends Thread {
 		log.info("Starting Processing: batches: " + amount + " size: " + size + " total: " + total + " at: " + startTime);
 		lastTime = new Date();
 	}
-	
+
 	protected void progress(int current, int total, int size) {
 		double percent = ((double)current / (double)total);
 		Date now = new Date();
@@ -113,13 +116,13 @@ public abstract class Indexer extends Thread {
 		}
 		lastTime = now;
 	}
-	
+
 	protected void finishProcess(int total) {
 		Date now = new Date();
 		long time = now.getTime() - startTime.getTime();
 		log.info("Processing finished: took: " + time + "ms to process " + total + " records at a rate of: " + (total / time) + "r/ms");
 	}
-	
+
 	private void createIndex() {
 		try {
 			log.info("Creating Core: " + coreName);
@@ -137,7 +140,7 @@ public abstract class Indexer extends Thread {
 			log.info("Unable to Load Core: " + coreName + " Reason: " + e.getMessage());
 		}
 	}
-	
+
 	private void deleteIndex() {
 		try {
 			log.info("Deleting Core: " + coreName);
@@ -155,7 +158,7 @@ public abstract class Indexer extends Thread {
 	public void setupServer() {
 		if(client == null) {
 			log.info("Setup Solr Client to use Solr Url: " + ConfigurationHelper.getSolrBaseUrl() + "/" + coreName);
-			
+
 			// Note queue size here is the size of the request that the amount of documents
 			// So if adding documents in batches you will have queue * document batch size in
 			// memory at any given time
@@ -164,6 +167,19 @@ public abstract class Indexer extends Thread {
 		}
 		if(adminClient == null) {
 			adminClient = new ConcurrentUpdateSolrClient(ConfigurationHelper.getSolrBaseUrl(), 1, 1);
+		}
+	}
+
+	public static void size(Map map) {
+		try {
+			System.out.println("Index Size: " + map.size());
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream oos = new ObjectOutputStream(baos);
+			oos.writeObject(map);
+			oos.close();
+			System.out.println("Data Size: " + baos.size());
+		} catch(IOException e){
+			e.printStackTrace();
 		}
 	}
 
