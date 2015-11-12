@@ -64,7 +64,7 @@ public class SearchSNPIndexer extends Indexer {
 			int end = set.getInt("maxKey");
 			set.close();
 
-			int chunkSize = 25000;
+			int chunkSize = 10000;
 			int chunks = end / chunkSize;
 			
 			startProcess(chunks, chunkSize, end);
