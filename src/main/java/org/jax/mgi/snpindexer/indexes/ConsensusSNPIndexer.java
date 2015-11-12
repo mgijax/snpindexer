@@ -31,8 +31,8 @@ public class ConsensusSNPIndexer extends Indexer {
 	
 	private ObjectMapper mapper = new ObjectMapper();
 	
-	public ConsensusSNPIndexer(String coreName) {
-		super(coreName);
+	public ConsensusSNPIndexer(IndexerConfig config) {
+		super(config);
 		mapper.setSerializationInclusion(Inclusion.NON_NULL);
 	}
 
@@ -52,7 +52,7 @@ public class ConsensusSNPIndexer extends Indexer {
 			
 			int end = getMaxConsensus();
 
-			int chunkSize = 25000;
+			int chunkSize = config.getChunkSize();
 			int chunks = end / chunkSize;
 			
 			startProcess(chunks, chunkSize, end);

@@ -12,6 +12,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.jax.mgi.snpdatamodel.ConsensusSNP;
 import org.jax.mgi.snpdatamodel.visitors.PrintVisitor;
 import org.jax.mgi.snpindexer.indexes.ConsensusSNPIndexer;
+import org.jax.mgi.snpindexer.indexes.IndexerConfig;
 import org.jax.mgi.snpindexer.util.ConfigurationHelper;
 import org.jax.mgi.snpindexer.util.SQLExecutor;
 
@@ -22,7 +23,7 @@ public class MainTest {
 	public static void main(String[] args) throws Exception {
 		ConfigurationHelper.init();
 		
-		ConsensusSNPIndexer i = new ConsensusSNPIndexer("ConsensusSNPIndex");
+		ConsensusSNPIndexer i = new ConsensusSNPIndexer(IndexerConfig.ConsensusSNPIndexer);
 		
 		HashMap<Integer, ConsensusSNP> consensusList = i.getConsensusSNP(2, 4);
 

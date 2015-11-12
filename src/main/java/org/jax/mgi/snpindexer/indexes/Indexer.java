@@ -21,21 +21,17 @@ public abstract class Indexer extends Thread {
 	protected ConcurrentUpdateSolrClient client = null;
 	protected ConcurrentUpdateSolrClient adminClient = null;
 
-	protected SQLExecutor sql = new SQLExecutor(50000, false);
+	protected SQLExecutor sql;
 	protected Logger log = Logger.getLogger(getClass());
 
-	// Minutes between commits
-	private int miuntes = 2;
-	// Milliseconds till next commit
-	private int commitFreq = 1000 * 60 * miuntes;
-
-	private String coreName = "";
 	private Date startTime = new Date();
 	private Date lastTime = new Date();
 	private Date lastDocTime = new Date();
+	protected IndexerConfig config;
 
-	public Indexer(String coreName) {
-		this.coreName = coreName;
+	public Indexer(IndexerConfig config) {
+		this.config = config;
+		sql = new SQLExecutor(config.getSqlFetchSize(), false);
 		setupServer();
 	}
 
@@ -51,7 +47,7 @@ public abstract class Indexer extends Thread {
 		try {
 			client.add(docs);
 			Date now = new Date();
-			if(now.getTime() - lastDocTime.getTime() > commitFreq) {
+			if(now.getTime() - lastDocTime.getTime() > config.getCommitFreq()) {
 				log.info("Commit timeout: " + (now.getTime() - lastDocTime.getTime()) + " running commit on current documents");
 				commit();
 				lastDocTime = now;
@@ -120,49 +116,49 @@ public abstract class Indexer extends Thread {
 	protected void finishProcess(int total) {
 		Date now = new Date();
 		long time = now.getTime() - startTime.getTime();
-		log.info("Processing finished: took: " + time + "ms to process " + total + " records at a rate of: " + (total / time) + "r/ms");
+		log.info("Processing finished: took: " + time + "ms to process " + total + " records at a rate of: " + ((total * 1000) / time) + "r/s");
 	}
 
 	private void createIndex() {
 		try {
-			log.info("Creating Core: " + coreName);
+			log.info("Creating Core: " + config.getCoreName());
 			CoreAdminRequest.Create req = new CoreAdminRequest.Create();
-			req.setCoreName(coreName);
-			req.setInstanceDir(coreName);
+			req.setCoreName(config.getCoreName());
+			req.setInstanceDir(config.getCoreName());
 			req.setDataDir("data");
-			req.setConfigSet(coreName);
+			req.setConfigSet(config.getCoreName());
 			req.setConfigName("solrconfig.xml");
 			req.setIsLoadOnStartup(true);
 			req.setSchemaName("schema.xml");
 			req.setIndexInfoNeeded(false);
 			req.process(adminClient);
 		} catch (Exception e) {
-			log.info("Unable to Load Core: " + coreName + " Reason: " + e.getMessage());
+			log.info("Unable to Load Core: " + config.getCoreName() + " Reason: " + e.getMessage());
 		}
 	}
 
 	private void deleteIndex() {
 		try {
-			log.info("Deleting Core: " + coreName);
+			log.info("Deleting Core: " + config.getCoreName());
 			CoreAdminRequest.Unload req = new CoreAdminRequest.Unload(true);
-			req.setCoreName(coreName);
+			req.setCoreName(config.getCoreName());
 			req.setDeleteIndex(true);
 			req.setDeleteDataDir(true);
 			req.setDeleteInstanceDir(true);
 			req.process(adminClient);
 		} catch (Exception e) {
-			log.info("Unable to Delete Core: " + coreName + " Reason: " + e.getMessage());
+			log.info("Unable to Delete Core: " + config.getCoreName() + " Reason: " + e.getMessage());
 		}
 	}
 
 	public void setupServer() {
 		if(client == null) {
-			log.info("Setup Solr Client to use Solr Url: " + ConfigurationHelper.getSolrBaseUrl() + "/" + coreName);
+			log.info("Setup Solr Client to use Solr Url: " + ConfigurationHelper.getSolrBaseUrl() + "/" + config.getCoreName());
 
 			// Note queue size here is the size of the request that the amount of documents
 			// So if adding documents in batches you will have queue * document batch size in
 			// memory at any given time
-			client = new ConcurrentUpdateSolrClient(ConfigurationHelper.getSolrBaseUrl() + "/" + coreName, 160, 8);
+			client = new ConcurrentUpdateSolrClient(ConfigurationHelper.getSolrBaseUrl() + "/" + config.getCoreName(), 160, 8);
 			client.setConnectionTimeout(100000);
 		}
 		if(adminClient == null) {

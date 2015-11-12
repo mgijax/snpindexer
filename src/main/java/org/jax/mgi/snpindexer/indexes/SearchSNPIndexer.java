@@ -14,8 +14,8 @@ public class SearchSNPIndexer extends Indexer {
 	private HashMap<Integer, String> markerAccessionMap = new HashMap<Integer, String>();
 	private HashMap<Integer, String> strainMap = new HashMap<Integer, String>();
 
-	public SearchSNPIndexer(String coreName) {
-		super(coreName);
+	public SearchSNPIndexer(IndexerConfig config) {
+		super(config);
 	}
 
 	@Override
@@ -64,7 +64,8 @@ public class SearchSNPIndexer extends Indexer {
 			int end = set.getInt("maxKey");
 			set.close();
 
-			int chunkSize = 10000;
+			int chunkSize = config.getChunkSize();
+			
 			int chunks = end / chunkSize;
 			
 			startProcess(chunks, chunkSize, end);
