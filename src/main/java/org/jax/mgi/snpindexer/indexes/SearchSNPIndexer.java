@@ -1,12 +1,10 @@
 package org.jax.mgi.snpindexer.indexes;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
 
 public class SearchSNPIndexer extends Indexer {
@@ -52,9 +50,10 @@ public class SearchSNPIndexer extends Indexer {
 			log.info("Finished Load Strains Map");
 
 			log.info("Starting Load Marker Accession Map");
-			set = sql.executeQuery("select _object_key, accid from mgd.acc_accession a where a._mgitype_key = 2 and a._logicaldb_key = 1 and preferred=1");
+			set = sql.executeQuery("select a.accid, m._marker_key from mgd.mrk_marker m, mgd.acc_accession a where m._marker_key = a._object_key and a._logicaldb_key = 1 and a._mgitype_key = 2 and a.preferred = 1 and m._organism_key = 1 and m._marker_status_key in (1, 3)");
+			
 			while (set.next()) {
-				markerAccessionMap.put(set.getInt("_object_key"), set.getString("accid"));
+				markerAccessionMap.put(set.getInt("_marker_key"), set.getString("accid"));
 			}
 			set.close();
 			log.info("Finished Load Marker Accession Map");
@@ -65,7 +64,7 @@ public class SearchSNPIndexer extends Indexer {
 			int end = set.getInt("maxKey");
 			set.close();
 
-			int chunkSize = 10000;
+			int chunkSize = 25000;
 			int chunks = end / chunkSize;
 			
 			startProcess(chunks, chunkSize, end);

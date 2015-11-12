@@ -25,9 +25,9 @@ public class ConsensusSNPIndexer extends Indexer {
 	private HashMap<Integer, String> proteins = null;
 	private HashMap<Integer, String> transcripts = null;
 	private HashMap<Integer, PopulationSNP> populations = null;
-	
 	private HashMap<Integer, String> functionClasses = null;
 	private HashMap<Integer, String> variationClasses = null;
+	private HashMap<Integer, Marker> markers = null;
 	
 	private ObjectMapper mapper = new ObjectMapper();
 	
@@ -48,10 +48,11 @@ public class ConsensusSNPIndexer extends Indexer {
 			setupProteins();
 			setupFunctionClasses();
 			setupVariationClasses();
+			setupMarkers();
 			
 			int end = getMaxConsensus();
 
-			int chunkSize = 10000;
+			int chunkSize = 25000;
 			int chunks = end / chunkSize;
 			
 			startProcess(chunks, chunkSize, end);
@@ -97,7 +98,6 @@ public class ConsensusSNPIndexer extends Indexer {
 		finish();
 	}
 
-
 	public HashMap<Integer, ConsensusSNP> getConsensusSNP(int start, int end) throws SQLException {
 	
 		HashMap<Integer, ConsensusSNP> ret = new HashMap<Integer, ConsensusSNP>();
@@ -141,9 +141,9 @@ public class ConsensusSNPIndexer extends Indexer {
 		
 		ResultSet set;
 		if(is5Prime) {
-			set = sql.executeQuery("select * from snp.snp_flank where _consensussnp_key > " + start + " and _consensussnp_key <= " + end + " and is5prime = 1 order by _consensussnp_key, sequencenum");
+			set = sql.executeQuery("select * from snp.snp_flank where _consensussnp_key > " + start + " and _consensussnp_key <= " + end + " and is5prime = 1");
 		} else {
-			set = sql.executeQuery("select * from snp.snp_flank where _consensussnp_key > " + start + " and _consensussnp_key <= " + end + " and is5prime = 0 order by _consensussnp_key, sequencenum");
+			set = sql.executeQuery("select * from snp.snp_flank where _consensussnp_key > " + start + " and _consensussnp_key <= " + end + " and is5prime = 0");
 		}
 		
 		while(set.next()) {
@@ -231,26 +231,33 @@ public class ConsensusSNPIndexer extends Indexer {
 	}
 	
 	private void populateConsensusMarkers(HashMap<Integer, ConsensusCoordinateSNP> coords, int start, int end) throws SQLException {
-		ResultSet set = sql.executeQuery("select scm._coord_cache_key, scm._consensussnp_key, a.accid, m.symbol, m.name, scm._fxn_key, scm._consensussnp_marker_key, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame "
-				+ "from mgd.acc_accession a, mgd.mrk_marker m, snp.snp_consensussnp_marker scm "
-				+ "where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " and a._object_key = scm._marker_key and "
-						+ "a._logicaldb_key = 1 and a._mgitype_key = 2 and a.preferred = 1 and scm._marker_key = m._marker_key");
+		ResultSet set = sql.executeQuery("select scm._coord_cache_key, scm._marker_key, scm._consensussnp_key, scm._fxn_key, scm._consensussnp_marker_key, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame "
+				+ "from snp.snp_consensussnp_marker scm "
+				+ "where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end);
 
 		while(set.next()) {
-			ConsensusMarkerSNP c = new ConsensusMarkerSNP();
-			c.setAaPosition(set.getString("aa_position"));
-			c.setAccid(set.getString("accid"));
-			c.setContigAllele(set.getString("contig_allele"));
-			c.setName(set.getString("name"));
-			c.setReadingFrame(set.getString("reading_frame"));
-			c.setResidue(set.getString("residue"));
-			c.setSymbol(set.getString("symbol"));
-			
-			c.setFunctionClass(functionClasses.get(set.getInt("_fxn_key")));
-			c.setProtein(proteins.get(set.getInt("_consensussnp_marker_key")));
-			c.setTranscript(transcripts.get(set.getInt("_consensussnp_marker_key")));
-			
-			coords.get(set.getInt("_coord_cache_key")).getMarkers().add(c);
+			int key = set.getInt("_marker_key");
+			if(markers.containsKey(key)) {
+				Marker m = markers.get(key);
+				
+				ConsensusMarkerSNP c = new ConsensusMarkerSNP();
+				
+				c.setAccid(m.accid);
+				c.setName(m.name);
+				c.setSymbol(m.symbol);
+				
+				c.setAaPosition(set.getString("aa_position"));
+				c.setContigAllele(set.getString("contig_allele"));
+				c.setReadingFrame(set.getString("reading_frame"));
+				c.setResidue(set.getString("residue"));
+				
+				c.setFunctionClass(functionClasses.get(set.getInt("_fxn_key")));
+				c.setProtein(proteins.get(set.getInt("_consensussnp_marker_key")));
+				c.setTranscript(transcripts.get(set.getInt("_consensussnp_marker_key")));
+				
+				coords.get(set.getInt("_coord_cache_key")).getMarkers().add(c);
+			}
+
 		}
 		set.close();
 	
@@ -360,6 +367,22 @@ public class ConsensusSNPIndexer extends Indexer {
 
 	}
 
+	private void setupMarkers() throws SQLException {
+		if(markers == null) {
+			markers = new HashMap<Integer, Marker>();
+			ResultSet set = sql.executeQuery("select a.accid, m.name, m.symbol, m._marker_key from mgd.mrk_marker m, mgd.acc_accession a where m._marker_key = a._object_key and a._logicaldb_key = 1 and a._mgitype_key = 2 and a.preferred = 1 and m._organism_key = 1 and m._marker_status_key in (1, 3)");
+			
+			while(set.next()) {
+				Marker m = new Marker();
+				m.accid = set.getString("accid");
+				m.symbol = set.getString("name");
+				m.name = set.getString("symbol");
+				markers.put(set.getInt("_marker_key"), m);
+			}
+			set.close();
+		}
+	}
+
 	public int getMaxConsensus() throws SQLException {
 		ResultSet set = sql.executeQuery("select max(scs._consensussnp_key) as maxKey from snp.snp_consensussnp scs");
 		set.next();
@@ -368,6 +391,10 @@ public class ConsensusSNPIndexer extends Indexer {
 		return end;
 	}
 	
-	
+	public class Marker {
+		public String accid;
+		public String name;
+		public String symbol;
+	}
 
 }
