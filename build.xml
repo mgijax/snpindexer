@@ -43,7 +43,7 @@
 
 	<!-- compile -->
 	<target name="compile" depends="clean, init" >
-		<javac debug="on" srcdir="src" destdir="build" classpathref="build.classpath" />
+		<javac debug="on" srcdir="src" destdir="build" classpathref="build.classpath" includeantruntime="false" />
 	</target>
 	
 	<target name="unittest" depends="compile">

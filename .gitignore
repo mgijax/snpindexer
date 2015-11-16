@@ -9,3 +9,4 @@ solr/SearchSNPIndex/
 config.properties
 logging.log
 lib/snpdatamodel.jar
+Configuration
