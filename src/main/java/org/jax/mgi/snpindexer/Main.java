@@ -40,6 +40,11 @@ public class Main {
 				} else if(args.length == 0) {
 					log.info("Starting indexer sequentially: " + name);
 					indexers.get(name).index();
+				} else {
+					log.info("Not Starting: " + name);
+					for(int i = 0; i < args.length; i++) {
+						log.info("Args[" + i + "]: " + args[i]);
+					}
 				}
 			}
 		}
