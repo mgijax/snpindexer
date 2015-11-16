@@ -1,1 +1,1 @@
-java -jar ../dist/snpindexer.jar -DTHEADED=true
+java -jar ../dist/snpindexer.jar
