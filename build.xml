@@ -10,7 +10,7 @@
 
 	<property name="src" location="src"/>
 	<property name="lib" location="lib"/>
-	<property name="deploy" location="dist"/>
+	<property name="snpdatamodel.dir" location="../snpdatamodel/dist"/>
 	<property name="unittestoutput.dir" location="unittest-results" />
 	
 	<property environment="env"/>
@@ -19,6 +19,7 @@
 		<fileset dir="lib">
 			<include name="**/*.jar"/>
 		</fileset>
+		<fileset includes="snpdatamodel.jar" dir="${snpdatamodel.dir}" />
 	</path>
 
 	<target name="dependencies">
@@ -36,6 +37,8 @@
 	<target name="clean" description="clean up" >
 		<delete dir="build"/>
 		<delete dir="dist"/>
+		<delete dir="target"/>
+		<delete dir="${unittestoutput.dir}"/>
 	</target>	
 
 	<!-- compile -->
@@ -61,6 +64,7 @@
 	<target name="jar" depends="unittest" description="Generates a jar.">
 		<copy file="conf/log4j.properties" tofile="build/log4j.properties" overwrite="true" />
 		<copy file="conf/config.properties" tofile="build/config.properties" failonerror="false" overwrite="true" />
+		<copy file="${snpdatamodel.dir}/snpdatamodel.jar" todir="lib" overwrite="true" />
 		<jar jarfile="dist/snpindexer.jar" basedir="build" excludes="**/*Test.class">
 			<zipgroupfileset dir="lib" />
 			<!-- <metainf dir="src/main/java/META-INF" includes="*.xml"/> -->
