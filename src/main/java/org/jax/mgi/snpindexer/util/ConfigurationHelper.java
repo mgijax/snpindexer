@@ -89,7 +89,7 @@ public class ConfigurationHelper {
 		log.info("\tpassword: " + password);
 		log.info("\tsolrBaseUrl: " + solrBaseUrl);
 		log.info("\tdebug: " + debug);
-		log.info("\threaded: " + threaded);
+		log.info("\tthreaded: " + threaded);
 	}
 
 	public static String getDriver() {
