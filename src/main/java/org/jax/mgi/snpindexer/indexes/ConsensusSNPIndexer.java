@@ -375,8 +375,8 @@ public class ConsensusSNPIndexer extends Indexer {
 			while(set.next()) {
 				Marker m = new Marker();
 				m.accid = set.getString("accid");
-				m.symbol = set.getString("name");
-				m.name = set.getString("symbol");
+				m.name = set.getString("name");
+				m.symbol = set.getString("symbol");
 				markers.put(set.getInt("_marker_key"), m);
 			}
 			set.close();
