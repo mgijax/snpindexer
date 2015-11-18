@@ -16,7 +16,7 @@
 	<property environment="env"/>
 
 	<path id="build.classpath">
-		<fileset dir="lib">
+		<fileset dir="lib" excludes="*.checksum">
 			<include name="**/*.jar"/>
 		</fileset>
 		<fileset includes="snpdatamodel.jar" dir="${snpdatamodel.dir}" />
