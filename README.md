@@ -75,6 +75,8 @@ This is the password that the odbc driver will use to connect to the database.
 This is the URL for the solr install. The snpIndexer will try to connect to SOLR_BASEURL/${index} and make inserts and delete there. There is a feature for running the indexer that two urls can used seperated by a comma. An example:
 
     -DSOLR_BASEURL=http://localhost1.jax.org:8983/solr,http://localhost2.jax.org:8983/solr
+    solrBaseUrl=http://localhost1.jax.org:8983/solr,http://localhost2.jax.org:8983/solr
+    export SOLR_BASEURL=http://localhost1.jax.org:8983/solr,http://localhost2.jax.org:8983/solr
     
  If adding documents to one of the solr's fail, then the whole indexer will fail.
 
