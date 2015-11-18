@@ -72,7 +72,12 @@ This is the user that the odbc driver will use to connect to the database.
 #### PG_DBPASS
 This is the password that the odbc driver will use to connect to the database.
 #### SOLR_BASEURL
-This is the URL for the solr install. The snpIndexer will try to connect to SOLR_BASEURL/${index} and make inserts and delete there.
+This is the URL for the solr install. The snpIndexer will try to connect to SOLR_BASEURL/${index} and make inserts and delete there. There is a feature for running the indexer that two urls can used seperated by a comma. An example:
+
+    -DSOLR_BASEURL=http://localhost1.jax.org:8983/solr,http://localhost2.jax.org:8983/solr
+    
+ If adding documents to one of the solr's fail, then the whole indexer will fail.
+
 #### DEBUG
 This is used to debug the application, set this to true and re run the application all output will be placed in a logging.log file.
 #### THREADED
