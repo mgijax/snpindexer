@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -18,8 +19,8 @@ import org.jax.mgi.snpindexer.util.SQLExecutor;
 
 public abstract class Indexer extends Thread {
 
-	protected ConcurrentUpdateSolrClient client = null;
-	protected ConcurrentUpdateSolrClient adminClient = null;
+	protected List<ConcurrentUpdateSolrClient> clients = null;
+	protected List<ConcurrentUpdateSolrClient> adminClients = null;
 
 	protected SQLExecutor sql;
 	protected Logger log = Logger.getLogger(getClass());
@@ -45,7 +46,9 @@ public abstract class Indexer extends Thread {
 
 	public void addDocuments(ArrayList<SolrInputDocument> docs) {
 		try {
-			client.add(docs);
+			for(ConcurrentUpdateSolrClient client: clients) {
+				client.add(docs);
+			}
 			Date now = new Date();
 			if(now.getTime() - lastDocTime.getTime() > config.getCommitFreq()) {
 				log.info("Commit timeout: " + (now.getTime() - lastDocTime.getTime()) + " running commit on current documents");
@@ -62,28 +65,32 @@ public abstract class Indexer extends Thread {
 	}
 
 	public void commit() {
-		try {
-			client.commit();
-		} catch (Exception e) {
-			int trys = 5;
-			while(trys-- > 0) {
-				try {
-					Thread.sleep(5000);
-					log.warn("Retrying Commit: ");
-					client.commit();
-				} catch (Exception e1) {
-					log.warn("Problem with Commit: " + ExceptionUtils.getRootCause(e1.getCause()));
-					e1.printStackTrace();
+		for(ConcurrentUpdateSolrClient client: clients) {
+			try {
+				client.commit();
+			} catch (Exception e) {
+				int trys = 5;
+				while(trys-- > 0) {
+					try {
+						Thread.sleep(5000);
+						log.warn("Retrying Commit: ");
+						client.commit();
+					} catch (Exception e1) {
+						log.warn("Problem with Commit: " + ExceptionUtils.getRootCause(e1.getCause()));
+						e1.printStackTrace();
+					}
 				}
+				log.error("Could not commit batch to solr exiting");
+				System.exit(1);
 			}
-			log.error("Could not commit batch to solr exiting");
-			System.exit(1);
 		}
 	}
 
 	public void finish() {
 		commit();
-		client.close();
+		for(ConcurrentUpdateSolrClient client: clients) {
+			client.close();
+		}
 		log.info("Indexer Finished");
 	}
 
@@ -131,7 +138,9 @@ public abstract class Indexer extends Thread {
 			req.setIsLoadOnStartup(true);
 			req.setSchemaName("schema.xml");
 			req.setIndexInfoNeeded(false);
-			req.process(adminClient);
+			for(ConcurrentUpdateSolrClient adminClient: adminClients) {
+				req.process(adminClient);
+			}
 		} catch (Exception e) {
 			log.info("Unable to Load Core: " + config.getCoreName() + " Reason: " + e.getMessage());
 		}
@@ -145,24 +154,34 @@ public abstract class Indexer extends Thread {
 			req.setDeleteIndex(true);
 			req.setDeleteDataDir(true);
 			req.setDeleteInstanceDir(true);
-			req.process(adminClient);
+			for(ConcurrentUpdateSolrClient adminClient: adminClients) {
+				req.process(adminClient);
+			}
 		} catch (Exception e) {
 			log.info("Unable to Delete Core: " + config.getCoreName() + " Reason: " + e.getMessage());
 		}
 	}
 
 	public void setupServer() {
-		if(client == null) {
-			log.info("Setup Solr Client to use Solr Url: " + ConfigurationHelper.getSolrBaseUrl() + "/" + config.getCoreName());
+		if(clients == null || clients.isEmpty()) {
+			for(String solrUrl: ConfigurationHelper.getSolrBaseUrls()) {
+				log.info("Setup Solr Client to use Solr Urls: " + solrUrl + "/" + config.getCoreName());
 
-			// Note queue size here is the size of the request that the amount of documents
-			// So if adding documents in batches you will have queue * document batch size in
-			// memory at any given time
-			client = new ConcurrentUpdateSolrClient(ConfigurationHelper.getSolrBaseUrl() + "/" + config.getCoreName(), 160, 8);
-			client.setConnectionTimeout(100000);
+				// Note queue size here is the size of the request that the amount of documents
+				// So if adding documents in batches you will have queue * document batch size in
+				// memory at any given time
+				
+				ConcurrentUpdateSolrClient client = new ConcurrentUpdateSolrClient(solrUrl + "/" + config.getCoreName(), 160, 8);
+				client.setConnectionTimeout(100000);
+				clients.add(client);
+			}
+			
 		}
-		if(adminClient == null) {
-			adminClient = new ConcurrentUpdateSolrClient(ConfigurationHelper.getSolrBaseUrl(), 1, 1);
+		if(adminClients == null || adminClients.isEmpty()) {
+			for(String solrUrl: ConfigurationHelper.getSolrBaseUrls()) {
+				ConcurrentUpdateSolrClient adminClient = new ConcurrentUpdateSolrClient(solrUrl, 1, 1);
+				adminClients.add(adminClient);
+			}
 		}
 	}
 

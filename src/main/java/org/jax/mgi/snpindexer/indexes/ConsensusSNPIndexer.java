@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
+import org.apache.solr.client.solrj.SolrRequest;
 import org.apache.solr.common.SolrInputDocument;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -67,7 +68,7 @@ public class ConsensusSNPIndexer extends Indexer {
 //					PrintVisitor pi = new PrintVisitor();
 //					c.Accept(pi);
 //					pi.generateOutput(System.out);
-					
+
 					SolrInputDocument doc = new SolrInputDocument();
 					doc.addField("consensussnp_accid", c.getAccid());
 					try {
