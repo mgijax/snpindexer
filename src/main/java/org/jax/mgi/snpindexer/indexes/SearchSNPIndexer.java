@@ -75,7 +75,7 @@ public class SearchSNPIndexer extends Indexer {
 				
 				
 				set = sql.executeQuery("select "
-						+ "sa.accid as consensussnp_accid, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc._varclass_key, scm._fxn_key, scm._marker_key, scs._mgdstrain_key "
+						+ "sa.accid as consensussnp_accid, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc._varclass_key, scm._fxn_key, scm._marker_key, scm.distance_from, scm.distance_direction, scs._mgdstrain_key "
 						+ "from "
 						+ "snp.snp_accession sa, snp.snp_coord_cache scc, snp.snp_consensussnp_marker scm, snp.snp_consensussnp_strainallele scs "
 						+ "where "
@@ -97,6 +97,8 @@ public class SearchSNPIndexer extends Indexer {
 					doc.addField("fxn", functionMap.get(set.getInt("_fxn_key")));
 					doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
 					doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
+					doc.addField("distance_from", strainMap.get(set.getInt("distance_from")));
+					doc.addField("distance_direction", strainMap.get(set.getString("distance_direction")));
 
 					docCache.add(doc);
 				}

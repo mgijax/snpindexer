@@ -42,6 +42,8 @@ public class ConsensusSNPIndexer extends Indexer {
 	
 		try {
 			
+			//Test Cases rs3163500,rs3657285,rs36238069,rs49786457,rs27287906,rs4228732,rs29392909,rs26922505,rs27287906
+			
 			setupStrains();
 			setupPopulations();
 			setupTranscripts();
