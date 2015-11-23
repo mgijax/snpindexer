@@ -24,7 +24,10 @@ public class ConsensusSNPIndexer extends Indexer {
 	private HashMap<Integer, String> strains = null;
 	private HashMap<Integer, String> proteins = null;
 	private HashMap<Integer, String> transcripts = null;
-	private HashMap<Integer, PopulationSNP> populations = null;
+	
+	private HashMap<Integer, PopulationSNP> populationsByPopulationKey = null;
+	private HashMap<Integer, PopulationSNP> populationsBySubHandleKey = null;
+	
 	private HashMap<Integer, String> functionClasses = null;
 	private HashMap<Integer, String> variationClasses = null;
 	private HashMap<Integer, Marker> markers = null;
@@ -168,7 +171,7 @@ public class ConsensusSNPIndexer extends Indexer {
 	}
 
 	private void populateSubSnps(HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
-		ResultSet set = sql.executeQuery("select sss._subsnp_key, sss._consensussnp_key, sa.accid, sss.allelesummary, sss.isexemplar, sss.orientation, sss._varclass_key, "
+		ResultSet set = sql.executeQuery("select sss._subsnp_key, sss._consensussnp_key, sss._subhandle_key, sa.accid, sss.allelesummary, sss.isexemplar, sss.orientation, sss._varclass_key, "
 				+ "sa2.accid as submitter from snp.snp_subsnp sss, snp.snp_accession sa, snp.snp_accession sa2 where sss._subsnp_key = sa._object_key "
 				+ "and sss._consensussnp_key > " + start + " and sss._consensussnp_key <= " + end + " and sa._logicaldb_key = 74 and sa._mgitype_key = 31 and "
 						+ "sss._subsnp_key = sa2._object_key and sa2._logicaldb_key = 75 and sa2._mgitype_key = 31");
@@ -184,12 +187,15 @@ public class ConsensusSNPIndexer extends Indexer {
 			snp.setOrientation(set.getString("orientation"));
 			snp.setSubmitterId(set.getString("submitter"));
 			snp.setVariationClass(variationClasses.get(set.getInt("_varclass_key")));
-			snp.setPopulations(new ArrayList<PopulationSNP>());
+			LinkedHashMap<String, PopulationSNP> pops = new LinkedHashMap<String, PopulationSNP>();
+			PopulationSNP p = populationsBySubHandleKey.get(set.getInt("_subhandle_key")).dup();
+			pops.put(p.getAccid(), p);
+			snp.setPopulations(pops);
 			snps.put(set.getInt("_subsnp_key"), snp);
 
 			consensusSnps.get(set.getInt("_consensussnp_key")).getSubSNPs().add(snp);
 		}
-		
+
 		populatePopulations(snps, start, end);
 		
 	}
@@ -266,19 +272,14 @@ public class ConsensusSNPIndexer extends Indexer {
 	}
 
 	private void populatePopulations(HashMap<Integer, SubSNP> snps, int start, int end) throws SQLException {
-		ResultSet set = sql.executeQuery("select ssa._subsnp_key, ssa._population_key, ssa._mgdstrain_key, ssa.allele from snp.snp_subsnp sss, snp.snp_subsnp_strainallele ssa where sss._consensussnp_key > " + start + " and sss._consensussnp_key <= " + end + " and sss._subsnp_key = ssa._subsnp_key order by ssa._subsnp_key, ssa._population_key");
-	
-		int lastPopulation = 0;
-		int lastSubSnp = 0;
-		PopulationSNP p = null;
+		ResultSet set = sql.executeQuery("select ssa._subsnp_key, ssa._population_key, ssa._mgdstrain_key, ssa.allele from snp.snp_subsnp sss, snp.snp_subsnp_strainallele ssa where sss._consensussnp_key > " + start + " and sss._consensussnp_key <= " + end + " and sss._subsnp_key = ssa._subsnp_key");
 
 		while(set.next()) {
-			if(lastPopulation != set.getInt("_population_key") || lastSubSnp != set.getInt("_subsnp_key")) {
-				p = populations.get(set.getInt("_population_key")).dup();
-				p.setAlleles(new ArrayList<AlleleSNP>());
-				snps.get(set.getInt("_subsnp_key")).getPopulations().add(p);
-				lastPopulation = set.getInt("_population_key");
-				lastSubSnp = set.getInt("_subsnp_key");
+			
+			PopulationSNP p = snps.get(set.getInt("_subsnp_key")).getPopulations().get(set.getInt("_population_key"));
+			if(p == null) {
+				p = populationsByPopulationKey.get(set.getInt("_population_key")).dup();
+				snps.get(set.getInt("_subsnp_key")).getPopulations().put(p.getAccid(), p);
 			}
 			
 			AlleleSNP a = new AlleleSNP();
@@ -351,10 +352,11 @@ public class ConsensusSNPIndexer extends Indexer {
 	}
 	
 	private void setupPopulations() throws SQLException {
-		if(populations == null) {
-			populations = new HashMap<Integer, PopulationSNP>();
+		if(populationsByPopulationKey == null || populationsBySubHandleKey == null) {
+			populationsByPopulationKey = new HashMap<Integer, PopulationSNP>();
+			populationsBySubHandleKey = new HashMap<Integer, PopulationSNP>();
 			
-			ResultSet set = sql.executeQuery("select sp._population_key, sa.accid, sp.subhandle, sp.name from snp.snp_population sp, snp.snp_accession sa where sp._population_key = sa._object_key and sa._logicaldb_key = 76 and sa._mgitype_key = 33");
+			ResultSet set = sql.executeQuery("select sp._population_key, sa.accid, sp.subhandle, sp._subhandle_key, sp.name from snp.snp_population sp, snp.snp_accession sa where sp._population_key = sa._object_key and sa._logicaldb_key = 76 and sa._mgitype_key = 33");
 			
 			while(set.next()) {
 				PopulationSNP p = new PopulationSNP();
@@ -362,7 +364,8 @@ public class ConsensusSNPIndexer extends Indexer {
 				p.setPopulationName(set.getString("name"));
 				p.setSubHandleName(set.getString("subhandle"));
 				p.setAlleles(new ArrayList<AlleleSNP>());
-				populations.put(set.getInt("_population_key"), p);
+				populationsByPopulationKey.put(set.getInt("_population_key"), p);
+				populationsBySubHandleKey.put(set.getInt("_subhandle_key"), p);
 			}
 			set.close();
 		}
