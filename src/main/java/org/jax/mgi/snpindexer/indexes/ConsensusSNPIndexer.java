@@ -22,8 +22,6 @@ import org.jax.mgi.snpdatamodel.SubSNP;
 public class ConsensusSNPIndexer extends Indexer {
 
 	private HashMap<Integer, String> strains = null;
-	private HashMap<Integer, String> proteins = null;
-	private HashMap<Integer, String> transcripts = null;
 	
 	private HashMap<Integer, PopulationSNP> populationsByPopulationKey = null;
 	private HashMap<Integer, PopulationSNP> populationsBySubHandleKey = null;
@@ -49,8 +47,6 @@ public class ConsensusSNPIndexer extends Indexer {
 			
 			setupStrains();
 			setupPopulations();
-			setupTranscripts();
-			setupProteins();
 			setupFunctionClasses();
 			setupVariationClasses();
 			setupMarkers();
@@ -239,8 +235,8 @@ public class ConsensusSNPIndexer extends Indexer {
 	}
 	
 	private void populateConsensusMarkers(HashMap<Integer, ConsensusCoordinateSNP> coords, int start, int end) throws SQLException {
-		ResultSet set = sql.executeQuery("select scm._coord_cache_key, scm._marker_key, scm._consensussnp_key, scm._fxn_key, scm._consensussnp_marker_key, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame "
-				+ "from snp.snp_consensussnp_marker scm "
+		ResultSet set = sql.executeQuery("select scm._coord_cache_key, scm._marker_key, scm._consensussnp_key, scm._fxn_key, scm._consensussnp_marker_key, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame, stp.transcriptid, stp.proteinid "
+				+ "from snp.snp_consensussnp_marker scm left join snp.snp_transcript_protein stp on scm._transcript_protein_key = stp._transcript_protein_key "
 				+ "where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end);
 
 		while(set.next()) {
@@ -260,8 +256,8 @@ public class ConsensusSNPIndexer extends Indexer {
 				c.setResidue(set.getString("residue"));
 				
 				c.setFunctionClass(functionClasses.get(set.getInt("_fxn_key")));
-				c.setProtein(proteins.get(set.getInt("_consensussnp_marker_key")));
-				c.setTranscript(transcripts.get(set.getInt("_consensussnp_marker_key")));
+				c.setProtein(set.getString("proteinid"));
+				c.setTranscript(set.getString("transcriptid"));
 				
 				coords.get(set.getInt("_coord_cache_key")).getMarkers().add(c);
 			}
@@ -300,30 +296,6 @@ public class ConsensusSNPIndexer extends Indexer {
 			ResultSet set = sql.executeQuery("select * from snp.snp_strain");
 			while(set.next()) {
 				strains.put(set.getInt("_mgdstrain_key"), set.getString("strain"));
-			}
-			set.close();
-		}
-	}
-	
-	private void setupTranscripts() throws SQLException {
-		if(transcripts == null) {
-			transcripts = new HashMap<Integer, String>();
-			
-			ResultSet set = sql.executeQuery("select _object_key, accid from snp.snp_accession where _logicaldb_key = 27 and _mgitype_key = 32 and prefixpart = 'NM_'");
-			while(set.next()) {
-				transcripts.put(set.getInt("_object_key"), set.getString("accid"));
-			}
-			set.close();
-		}
-	}
-	
-	private void setupProteins() throws SQLException {
-		if(proteins == null) {
-			proteins = new HashMap<Integer, String>();
-			
-			ResultSet set = sql.executeQuery("select _object_key, accid from snp.snp_accession where _logicaldb_key = 27 and _mgitype_key = 32 and prefixpart = 'NP_'");
-			while(set.next()) {
-				proteins.put(set.getInt("_object_key"), set.getString("accid"));
 			}
 			set.close();
 		}

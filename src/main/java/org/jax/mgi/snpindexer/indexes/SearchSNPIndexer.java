@@ -97,8 +97,8 @@ public class SearchSNPIndexer extends Indexer {
 					doc.addField("fxn", functionMap.get(set.getInt("_fxn_key")));
 					doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
 					doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
-					doc.addField("distance_from", strainMap.get(set.getInt("distance_from")));
-					doc.addField("distance_direction", strainMap.get(set.getString("distance_direction")));
+					doc.addField("distance_from", set.getInt("distance_from"));
+					doc.addField("distance_direction", set.getString("distance_direction"));
 
 					docCache.add(doc);
 				}
