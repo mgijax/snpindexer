@@ -183,14 +183,14 @@ public class ConsensusSNPIndexer extends Indexer {
 			snp.setSubSnpKey(set.getInt("_subsnp_key"));
 			snp.setAccid(set.getString("accid"));
 			snp.setAlleleSummary(set.getString("allelesummary"));
+			
 			snp.setExemplar(set.getInt("isexemplar") == 1);
 			snp.setOrientation(set.getString("orientation"));
 			snp.setSubmitterId(set.getString("submitter"));
 			snp.setVariationClass(variationClasses.get(set.getInt("_varclass_key")));
-			LinkedHashMap<String, PopulationSNP> pops = new LinkedHashMap<String, PopulationSNP>();
+			LinkedHashMap<Integer, PopulationSNP> pops = new LinkedHashMap<Integer, PopulationSNP>();
 			PopulationSNP p = populationsBySubHandleKey.get(set.getInt("_subhandle_key")).dup();
-			pops.put(p.getAccid(), p);
-			snp.setPopulations(pops);
+			snp.populations.put(p.getPopulationKey(), p);
 			snps.put(set.getInt("_subsnp_key"), snp);
 
 			consensusSnps.get(set.getInt("_consensussnp_key")).getSubSNPs().add(snp);
@@ -273,13 +273,15 @@ public class ConsensusSNPIndexer extends Indexer {
 
 	private void populatePopulations(HashMap<Integer, SubSNP> snps, int start, int end) throws SQLException {
 		ResultSet set = sql.executeQuery("select ssa._subsnp_key, ssa._population_key, ssa._mgdstrain_key, ssa.allele from snp.snp_subsnp sss, snp.snp_subsnp_strainallele ssa where sss._consensussnp_key > " + start + " and sss._consensussnp_key <= " + end + " and sss._subsnp_key = ssa._subsnp_key");
-
+		// TODO
 		while(set.next()) {
+			int snpKey = set.getInt("_subsnp_key");
+			int popKey = set.getInt("_population_key");
 			
-			PopulationSNP p = snps.get(set.getInt("_subsnp_key")).getPopulations().get(set.getInt("_population_key"));
+			PopulationSNP p = snps.get(snpKey).populations.get(popKey);
 			if(p == null) {
-				p = populationsByPopulationKey.get(set.getInt("_population_key")).dup();
-				snps.get(set.getInt("_subsnp_key")).getPopulations().put(p.getAccid(), p);
+				p = populationsByPopulationKey.get(popKey).dup();
+				snps.get(snpKey).populations.put(p.getPopulationKey(), p);
 			}
 			
 			AlleleSNP a = new AlleleSNP();
@@ -360,6 +362,7 @@ public class ConsensusSNPIndexer extends Indexer {
 			
 			while(set.next()) {
 				PopulationSNP p = new PopulationSNP();
+				p.setPopulationKey(set.getInt("_population_key"));
 				p.setAccid(set.getString("accid"));
 				p.setPopulationName(set.getString("name"));
 				p.setSubHandleName(set.getString("subhandle"));
