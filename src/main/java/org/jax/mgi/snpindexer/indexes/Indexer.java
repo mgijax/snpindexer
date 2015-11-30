@@ -3,6 +3,8 @@ package org.jax.mgi.snpindexer.indexes;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
@@ -28,6 +30,8 @@ public abstract class Indexer extends Thread {
 	private Date lastTime = new Date();
 	private Date lastDocTime = new Date();
 	protected IndexerConfig config;
+	protected Runtime runtime = Runtime.getRuntime();
+	protected DecimalFormat df = new DecimalFormat("#.00");
 
 	public Indexer(IndexerConfig config) {
 		this.config = config;
@@ -46,18 +50,23 @@ public abstract class Indexer extends Thread {
 	public void addDocuments(ArrayList<SolrInputDocument> docs) {
 		try {
 			client.add(docs);
-			Date now = new Date();
-			if(now.getTime() - lastDocTime.getTime() > config.getCommitFreq()) {
-				log.info("Commit timeout: " + (now.getTime() - lastDocTime.getTime()) + " running commit on current documents");
-				commit();
-				lastDocTime = now;
-			}
+			checkCommit();
+			checkMemory();
 		} catch (SolrServerException e) {
 			e.printStackTrace();
 			System.exit(1);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
+		}
+	}
+
+	private void checkCommit() {
+		Date now = new Date();
+		if(now.getTime() - lastDocTime.getTime() > config.getCommitFreq()) {
+			log.info("Commit timeout: " + (now.getTime() - lastDocTime.getTime()) + " running commit on current documents");
+			commit();
+			lastDocTime = now;
 		}
 	}
 
@@ -79,6 +88,21 @@ public abstract class Indexer extends Thread {
 			log.error("Could not commit batch to solr exiting");
 			System.exit(1);
 		}
+	}
+
+	private void checkMemory() {
+		if(memoryPercent() > 0.8) {
+			log.info("Memory timeout: " + df.format(memoryPercent() * 100) + "% running blockUntilFinished on current documents");
+			client.blockUntilFinished();
+			log.info("Used Mem: " + (runtime.totalMemory() - runtime.freeMemory()));
+			log.info("Free Mem: " + runtime.freeMemory());
+			log.info("Total Mem: " + runtime.totalMemory());
+			log.info("Max Memory: " + runtime.maxMemory());
+		}
+	}
+	
+	public double memoryPercent() {
+		return ((double)runtime.totalMemory() - (double)runtime.freeMemory()) / (double)runtime.maxMemory();
 	}
 
 	public void finish() {
@@ -106,7 +130,7 @@ public abstract class Indexer extends Thread {
 		if(percent > 0) {
 			int perms = (int)(diff / percent);
 			Date end = new Date(startTime.getTime() + perms);
-			log.info("Batch: " + current + " of " + total + " took: " + time + "ms to process " + size + " records at a rate of: " + ((size * 1000) / time) + "r/s, Percentage complete: " + (int)(percent * 100) + "%, Estimated Finish: " + end);
+			log.info("Batch: " + current + " of " + total + " took: " + time + "ms to process " + size + " records at a rate of: " + ((size * 1000) / time) + "r/s, Memory: " + df.format(memoryPercent() * 100) + "%, Percentage complete: " + (int)(percent * 100) + "%, Estimated Finish: " + end);
 		} else {
 			log.info("Batch: " + current + " of " + total + " took: " + time + "ms to process " + size + " records at a rate of: " + ((size * 1000) / time) + "r/s");
 		}
@@ -155,7 +179,7 @@ public abstract class Indexer extends Thread {
 		if(client == null) {
 			log.info("Setup Solr Client to use Solr Url: " + ConfigurationHelper.getSolrBaseUrl() + "/" + config.getCoreName());
 
-			// Note queue size here is the size of the request that the amount of documents
+			// Note queue size here is NOT the amount of documents, but the number of requests
 			// So if adding documents in batches you will have queue * document batch size in
 			// memory at any given time
 			client = new ConcurrentUpdateSolrClient(ConfigurationHelper.getSolrBaseUrl() + "/" + config.getCoreName(), 160, 8);

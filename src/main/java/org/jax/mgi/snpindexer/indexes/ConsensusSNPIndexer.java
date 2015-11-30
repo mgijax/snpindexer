@@ -30,6 +30,8 @@ public class ConsensusSNPIndexer extends Indexer {
 	private HashMap<Integer, String> variationClasses = null;
 	private HashMap<Integer, Marker> markers = null;
 	
+	private HashMap<Integer, HashMap<String, String>> markerKeys = new HashMap<Integer, HashMap<String,String>>();
+	
 	private ObjectMapper mapper = new ObjectMapper();
 	
 	public ConsensusSNPIndexer(IndexerConfig config) {
@@ -64,15 +66,17 @@ public class ConsensusSNPIndexer extends Indexer {
 				HashMap<Integer, ConsensusSNP> consensusList = getConsensusSNP(start, (start + chunkSize));
 				
 				ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
-				for(ConsensusSNP c: consensusList.values()) {
+				for(ConsensusSNP snp: consensusList.values()) {
 //					PrintVisitor pi = new PrintVisitor();
 //					c.Accept(pi);
 //					pi.generateOutput(System.out);
 					
 					SolrInputDocument doc = new SolrInputDocument();
-					doc.addField("consensussnp_accid", c.getAccid());
+					doc.addField("consensussnp_accid", snp.getAccid());
+					doc.addField("markerIds", markerKeys.get(snp.getConsensusKey()).keySet());
+					//System.out.println(markerKeys.get(snp.getConsensusKey()).keySet());
 					try {
-						String json = mapper.writeValueAsString(c);
+						String json = mapper.writeValueAsString(snp);
 						doc.addField("objectJSONData", json);
 					} catch (JsonGenerationException e) {
 						e.printStackTrace();
@@ -85,6 +89,7 @@ public class ConsensusSNPIndexer extends Indexer {
 				}
 				addDocuments(docCache);
 				progress(i, chunks, chunkSize);
+				markerKeys.clear();
 			}
 			
 			finishProcess(end);
@@ -121,6 +126,8 @@ public class ConsensusSNPIndexer extends Indexer {
 			snp.setConsensusCoordinates(new ArrayList<ConsensusCoordinateSNP>());
 			snp.setSubSNPs(new ArrayList<SubSNP>());
 			snp.setAlleles(new ArrayList<AlleleSNP>());
+			
+			markerKeys.put(snp.getConsensusKey(), new HashMap<String, String>());
 			
 			ret.put(snp.getConsensusKey(), snp);
 		}
@@ -163,7 +170,6 @@ public class ConsensusSNPIndexer extends Indexer {
 				consensusSnps.get(i).setFlank3Prime(flanks.get(i).toString());
 			}
 		}
-		
 	}
 
 	private void populateSubSnps(HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
@@ -231,11 +237,10 @@ public class ConsensusSNPIndexer extends Indexer {
 		set.close();
 		
 		populateConsensusMarkers(coords, start, end);
-		
 	}
 	
 	private void populateConsensusMarkers(HashMap<Integer, ConsensusCoordinateSNP> coords, int start, int end) throws SQLException {
-		ResultSet set = sql.executeQuery("select scm._coord_cache_key, scm._marker_key, scm._consensussnp_key, scm._fxn_key, scm._consensussnp_marker_key, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame, stp.transcriptid, stp.proteinid "
+		ResultSet set = sql.executeQuery("select scm._coord_cache_key, scm._marker_key, scm._consensussnp_key, scm._fxn_key, scm._consensussnp_marker_key, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame, scm.distance_from, scm.distance_direction, stp.transcriptid, stp.proteinid "
 				+ "from snp.snp_consensussnp_marker scm left join snp.snp_transcript_protein stp on scm._transcript_protein_key = stp._transcript_protein_key "
 				+ "where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end);
 
@@ -255,9 +260,15 @@ public class ConsensusSNPIndexer extends Indexer {
 				c.setReadingFrame(set.getString("reading_frame"));
 				c.setResidue(set.getString("residue"));
 				
-				c.setFunctionClass(functionClasses.get(set.getInt("_fxn_key")));
+				c.setDistanceFrom(set.getInt("distance_from"));
+				c.setDistanceDirection(set.getString("distance_direction"));
+				
 				c.setProtein(set.getString("proteinid"));
 				c.setTranscript(set.getString("transcriptid"));
+				
+				c.setFunctionClass(functionClasses.get(set.getInt("_fxn_key")));
+				
+				markerKeys.get(set.getInt("_consensussnp_key")).put(m.accid, m.accid);
 				
 				coords.get(set.getInt("_coord_cache_key")).getMarkers().add(c);
 			}
