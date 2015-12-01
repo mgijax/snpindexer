@@ -30,8 +30,6 @@ public class ConsensusSNPIndexer extends Indexer {
 	private HashMap<Integer, String> variationClasses = null;
 	private HashMap<Integer, Marker> markers = null;
 	
-	private HashMap<Integer, HashMap<String, String>> markerKeys = new HashMap<Integer, HashMap<String,String>>();
-	
 	private ObjectMapper mapper = new ObjectMapper();
 	
 	public ConsensusSNPIndexer(IndexerConfig config) {
@@ -73,8 +71,6 @@ public class ConsensusSNPIndexer extends Indexer {
 					
 					SolrInputDocument doc = new SolrInputDocument();
 					doc.addField("consensussnp_accid", snp.getAccid());
-					doc.addField("markerIds", markerKeys.get(snp.getConsensusKey()).keySet());
-					//System.out.println(markerKeys.get(snp.getConsensusKey()).keySet());
 					try {
 						String json = mapper.writeValueAsString(snp);
 						doc.addField("objectJSONData", json);
@@ -89,7 +85,6 @@ public class ConsensusSNPIndexer extends Indexer {
 				}
 				addDocuments(docCache);
 				progress(i, chunks, chunkSize);
-				markerKeys.clear();
 			}
 			
 			finishProcess(end);
@@ -126,8 +121,6 @@ public class ConsensusSNPIndexer extends Indexer {
 			snp.setConsensusCoordinates(new ArrayList<ConsensusCoordinateSNP>());
 			snp.setSubSNPs(new ArrayList<SubSNP>());
 			snp.setAlleles(new ArrayList<AlleleSNP>());
-			
-			markerKeys.put(snp.getConsensusKey(), new HashMap<String, String>());
 			
 			ret.put(snp.getConsensusKey(), snp);
 		}
@@ -267,8 +260,6 @@ public class ConsensusSNPIndexer extends Indexer {
 				c.setTranscript(set.getString("transcriptid"));
 				
 				c.setFunctionClass(functionClasses.get(set.getInt("_fxn_key")));
-				
-				markerKeys.get(set.getInt("_consensussnp_key")).put(m.accid, m.accid);
 				
 				coords.get(set.getInt("_coord_cache_key")).getMarkers().add(c);
 			}
