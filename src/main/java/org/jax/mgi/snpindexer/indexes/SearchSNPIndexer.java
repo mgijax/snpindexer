@@ -86,21 +86,24 @@ public class SearchSNPIndexer extends Indexer {
 
 				while (set.next()) {
 
-					SolrInputDocument doc = new SolrInputDocument();
+					if(markerAccessionMap.containsKey(set.getInt("_marker_key"))) {
 					
-					doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
-					
-					doc.addField("chromosome", set.getString("chromosome"));
-					doc.addField("startcoordinate", set.getDouble("startcoordinate"));
-					doc.addField("ismulticoord", set.getInt("ismulticoord"));
-					doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
-					doc.addField("fxn", functionMap.get(set.getInt("_fxn_key")));
-					doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
-					doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
-					doc.addField("distance_from", set.getInt("distance_from"));
-					doc.addField("distance_direction", set.getString("distance_direction"));
-
-					docCache.add(doc);
+						SolrInputDocument doc = new SolrInputDocument();
+						
+						doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
+						
+						doc.addField("chromosome", set.getString("chromosome"));
+						doc.addField("startcoordinate", set.getDouble("startcoordinate"));
+						doc.addField("ismulticoord", set.getInt("ismulticoord"));
+						doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
+						doc.addField("fxn", functionMap.get(set.getInt("_fxn_key")));
+						doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
+						doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
+						doc.addField("distance_from", set.getInt("distance_from"));
+						doc.addField("distance_direction", set.getString("distance_direction"));
+	
+						docCache.add(doc);
+					}
 				}
 				set.close();
 				
