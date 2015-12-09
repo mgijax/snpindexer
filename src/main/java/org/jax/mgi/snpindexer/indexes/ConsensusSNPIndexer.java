@@ -13,6 +13,7 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.jax.mgi.snpdatamodel.AlleleSNP;
+import org.jax.mgi.snpdatamodel.ConsensusAlleleSNP;
 import org.jax.mgi.snpdatamodel.ConsensusCoordinateSNP;
 import org.jax.mgi.snpdatamodel.ConsensusMarkerSNP;
 import org.jax.mgi.snpdatamodel.ConsensusSNP;
@@ -120,7 +121,7 @@ public class ConsensusSNPIndexer extends Indexer {
 			
 			snp.setConsensusCoordinates(new ArrayList<ConsensusCoordinateSNP>());
 			snp.setSubSNPs(new ArrayList<SubSNP>());
-			snp.setAlleles(new ArrayList<AlleleSNP>());
+			snp.setConsensusAlleles(new ArrayList<ConsensusAlleleSNP>());
 			
 			ret.put(snp.getConsensusKey(), snp);
 		}
@@ -198,11 +199,11 @@ public class ConsensusSNPIndexer extends Indexer {
 	private void populateConsensusAlleles(HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
 		ResultSet set = sql.executeQuery("select ssca._consensussnp_key, ssca._mgdstrain_key, ssca.isconflict, ssca.allele from snp.snp_consensussnp_strainallele ssca where ssca._consensussnp_key > " + start + " and ssca._consensussnp_key <= " + end);
 		while(set.next()) {
-			AlleleSNP a = new AlleleSNP();
-			a.setAllele(set.getString("allele"));
-			a.setConflict(set.getInt("isconflict") == 1);
-			a.setStrain(strains.get(set.getInt("_mgdstrain_key")));
-			consensusSnps.get(set.getInt("_consensussnp_key")).getAlleles().add(a);
+			ConsensusAlleleSNP ca = new ConsensusAlleleSNP();
+			ca.setAllele(set.getString("allele"));
+			ca.setConflict(set.getInt("isconflict") == 1);
+			ca.setStrain(strains.get(set.getInt("_mgdstrain_key")));
+			consensusSnps.get(set.getInt("_consensussnp_key")).getConsensusAlleles().add(ca);
 		}
 		set.close();
 	}
@@ -284,7 +285,6 @@ public class ConsensusSNPIndexer extends Indexer {
 			
 			AlleleSNP a = new AlleleSNP();
 			a.setAllele(set.getString("allele"));
-			a.setConflict(false);
 			a.setStrain(strains.get(set.getInt("_mgdstrain_key")));
 			p.getAlleles().add(a);
 		}
