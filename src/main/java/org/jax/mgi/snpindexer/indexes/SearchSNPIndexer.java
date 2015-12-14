@@ -79,7 +79,8 @@ public class SearchSNPIndexer extends Indexer {
 						+ "from "
 						+ "snp.snp_accession sa, snp.snp_coord_cache scc, snp.snp_consensussnp_marker scm, snp.snp_consensussnp_strainallele scs "
 						+ "where "
-						+ "sa._object_key = scc._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and scc._coord_cache_key = scm._coord_cache_key and scc._consensussnp_key = scs._consensussnp_key and "
+						+ "sa._object_key = scc._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and scc._coord_cache_key = scm._coord_cache_key and "
+						+ "scc.ismulticoord = 0 and scc._consensussnp_key = scs._consensussnp_key and "
 						+ "sa._object_key > " + start + " and sa._object_key <= " + (start + chunkSize));
 
 				ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
