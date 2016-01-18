@@ -12,8 +12,12 @@ public class SearchSNPIndexer extends Indexer {
 	private HashMap<Integer, String> variationMap = new HashMap<Integer, String>();
 	private HashMap<Integer, String> functionMap = new HashMap<Integer, String>();
 	private HashMap<Integer, String> markerAccessionMap = new HashMap<Integer, String>();
+	
+	
 	private HashMap<Integer, String> strainMap = new HashMap<Integer, String>();
+	private HashMap<Integer, ArrayList<String>> strainsMap = new HashMap<Integer, ArrayList<String>>();
 
+	
 	public SearchSNPIndexer(IndexerConfig config) {
 		super(config);
 	}
@@ -27,8 +31,22 @@ public class SearchSNPIndexer extends Indexer {
 
 			log.info("Starting Load Function Type Map");
 			ResultSet set = sql.executeQuery("select _term_key, term from mgd.voc_term where _vocab_key = 49");
+			
+			StringBuilder excludeFunctionClasses = new StringBuilder();
+			
 			while (set.next()) {
-				functionMap.put(set.getInt("_term_key"), set.getString("term"));
+				
+				Integer key = set.getInt("_term_key");
+				String fc = set.getString("term");
+				
+				if(fc.equals("within coordinates of") || fc.equals("within distance of")) {
+					if(excludeFunctionClasses.length() > 0){
+						excludeFunctionClasses.append(',');
+				    }
+					excludeFunctionClasses.append(key);
+				}
+				
+				functionMap.put(key, fc);
 			}
 			set.close();
 			log.info("Finished Load Function Type Map");
@@ -61,50 +79,61 @@ public class SearchSNPIndexer extends Indexer {
 			set = sql.executeQuery("select max(sa._object_key) as maxKey from snp.snp_accession sa where sa._logicaldb_key = 73 and sa._mgitype_key = 30");
 
 			set.next();
-			int end = set.getInt("maxKey");
+			int max = set.getInt("maxKey");
 			set.close();
 
 			int chunkSize = config.getChunkSize();
 			
-			int chunks = end / chunkSize;
+			int chunks = max / chunkSize;
 			
-			startProcess(chunks, chunkSize, end);
+			startProcess(chunks, chunkSize, max);
 			
 			for(int i = 0; i <= chunks; i++) {
 				int start = i * chunkSize;
+				int end = (start + chunkSize);
 				
+				setupStrainsMap(start, end);
 				
 				set = sql.executeQuery("select "
-						+ "sa.accid as consensussnp_accid, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc._varclass_key, scm._fxn_key, scm._marker_key, scm.distance_from, scm.distance_direction, scs._mgdstrain_key "
+						+ "sa.accid as consensussnp_accid, sa._object_key, scc.chromosome, scc.startcoordinate, scc._varclass_key, scm._marker_key, scm._fxn_key "
 						+ "from "
-						+ "snp.snp_accession sa, snp.snp_coord_cache scc, snp.snp_consensussnp_marker scm, snp.snp_consensussnp_strainallele scs "
+						+ "snp.snp_accession sa, snp.snp_coord_cache scc "
+						+ "left join snp.snp_consensussnp_marker scm on "
+						+ "scc._consensussnp_key = scm._consensussnp_key and scm._fxn_key not in (" + excludeFunctionClasses + ") "
 						+ "where "
-						+ "sa._object_key = scc._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and scc._coord_cache_key = scm._coord_cache_key and "
-						+ "scc.ismulticoord = 0 and scc._consensussnp_key = scs._consensussnp_key and "
-						+ "sa._object_key > " + start + " and sa._object_key <= " + (start + chunkSize));
+						+ "sa._object_key = scc._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and "
+						+ "scc.ismulticoord = 0 and "
+						+ "sa._object_key > " + start + " and sa._object_key <= " + end + " "
+						+ "group by sa.accid, sa._object_key, scc.chromosome, scc.startcoordinate, scc._varclass_key, scm._marker_key, scm._fxn_key "
+						+ "order by sa._object_key "
+				);
 
 				ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
 
+				
+				
 				while (set.next()) {
 
-					if(markerAccessionMap.containsKey(set.getInt("_marker_key"))) {
+					SolrInputDocument doc = new SolrInputDocument();
 					
-						SolrInputDocument doc = new SolrInputDocument();
-						
-						doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
-						
-						doc.addField("chromosome", set.getString("chromosome"));
-						doc.addField("startcoordinate", set.getDouble("startcoordinate"));
-						doc.addField("ismulticoord", set.getInt("ismulticoord"));
-						doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
+					doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
+					
+					doc.addField("chromosome", set.getString("chromosome"));
+					doc.addField("startcoordinate", set.getDouble("startcoordinate"));
+					doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
+					if(functionMap.containsKey(set.getInt("_fxn_key"))) {
 						doc.addField("fxn", functionMap.get(set.getInt("_fxn_key")));
-						doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
-						doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
-						doc.addField("distance_from", set.getInt("distance_from"));
-						doc.addField("distance_direction", set.getString("distance_direction"));
-	
-						docCache.add(doc);
 					}
+					if(markerAccessionMap.containsKey(set.getInt("_marker_key"))) {
+						doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
+					}
+					
+					doc.addField("strains", strainsMap.get(set.getInt("_object_key")));
+					
+					//doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
+
+					docCache.add(doc);
+
 				}
 				set.close();
 				
@@ -112,7 +141,7 @@ public class SearchSNPIndexer extends Indexer {
 				progress(i, chunks, chunkSize);
 			}
 			
-			finishProcess(end);
+			finishProcess(max);
 			
 			sql.cleanup();
 
@@ -123,6 +152,22 @@ public class SearchSNPIndexer extends Indexer {
 		}
 		
 		finish();
+	}
+
+	private void setupStrainsMap(int start, int end) throws SQLException {
+		strainsMap.clear();
+		
+		ResultSet set = sql.executeQuery("select scs._consensussnp_key, scs._mgdstrain_key from snp.snp_consensussnp_strainallele scs where scs._consensussnp_key > " + start + " and scs._consensussnp_key <= " + end + " ");
+		
+		while (set.next()) {
+			ArrayList<String> list = strainsMap.get(set.getInt("_consensussnp_key"));
+			if(list == null) {
+				list = new ArrayList<String>();
+				strainsMap.put(set.getInt("_consensussnp_key"), list);
+			}
+			list.add(strainMap.get(set.getInt("_mgdstrain_key")));
+		}
+		set.close();
 	}
 
 }
