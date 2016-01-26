@@ -14,6 +14,6 @@ fi
 
 . ${MGICONFIG}/master.config.sh
 
-FILE_DIR=${DATALOADSOUTPUT/snpindexer
+FILE_DIR=${DATALOADSOUTPUT}/snpindexer
 LOG_DIR=${FILE_DIR}/logs
 export FILE_DIR LOG_DIR
