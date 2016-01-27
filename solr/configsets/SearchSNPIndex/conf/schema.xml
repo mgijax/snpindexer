@@ -113,8 +113,8 @@
    <field name="chromosome" type="chromosome" indexed="true" stored="true" multiValued="false" /> 
    <field name="startcoordinate" type="double" indexed="true" stored="true" multiValued="false" /> 
    <field name="varclass" type="string" indexed="true" stored="true" multiValued="false" /> 
-   <field name="fxn" type="string" indexed="true" stored="true" multiValued="false" /> 
-   <field name="marker_accid" type="string" indexed="true" stored="true" multiValued="false" /> 
+   <field name="fxn" type="string" indexed="true" stored="true" multiValued="true" /> 
+   <field name="marker_accid" type="string" indexed="true" stored="true" multiValued="true" /> 
    <field name="strains" type="string" indexed="true" stored="true" multiValued="true" /> 
 
    <!-- Dynamic field definitions allow using convention over configuration

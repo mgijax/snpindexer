@@ -10,13 +10,16 @@ import org.apache.solr.common.SolrInputDocument;
 public class SearchSNPIndexer extends Indexer {
 
 	private HashMap<Integer, String> variationMap = new HashMap<Integer, String>();
+	
 	private HashMap<Integer, String> functionMap = new HashMap<Integer, String>();
-	private HashMap<Integer, String> markerAccessionMap = new HashMap<Integer, String>();
-	
-	
+	private HashMap<Integer, String> markerMap = new HashMap<Integer, String>();
 	private HashMap<Integer, String> strainMap = new HashMap<Integer, String>();
+	
 	private HashMap<Integer, ArrayList<String>> strainsMap = new HashMap<Integer, ArrayList<String>>();
+	private HashMap<Integer, ArrayList<String>> functionClassesMap = new HashMap<Integer, ArrayList<String>>();
+	private HashMap<Integer, ArrayList<String>> markersMap = new HashMap<Integer, ArrayList<String>>();
 
+	private StringBuffer excludeFunctionClasses = new StringBuffer();
 	
 	public SearchSNPIndexer(IndexerConfig config) {
 		super(config);
@@ -31,8 +34,6 @@ public class SearchSNPIndexer extends Indexer {
 
 			log.info("Starting Load Function Type Map");
 			ResultSet set = sql.executeQuery("select _term_key, term from mgd.voc_term where _vocab_key = 49");
-			
-			StringBuilder excludeFunctionClasses = new StringBuilder();
 			
 			while (set.next()) {
 				
@@ -71,7 +72,7 @@ public class SearchSNPIndexer extends Indexer {
 			set = sql.executeQuery("select a.accid, m._marker_key from mgd.mrk_marker m, mgd.acc_accession a where m._marker_key = a._object_key and a._logicaldb_key = 1 and a._mgitype_key = 2 and a.preferred = 1 and m._organism_key = 1 and m._marker_status_key in (1, 3)");
 			
 			while (set.next()) {
-				markerAccessionMap.put(set.getInt("_marker_key"), set.getString("accid"));
+				markerMap.put(set.getInt("_marker_key"), set.getString("accid"));
 			}
 			set.close();
 			log.info("Finished Load Marker Accession Map");
@@ -93,9 +94,11 @@ public class SearchSNPIndexer extends Indexer {
 				int end = (start + chunkSize);
 				
 				setupStrainsMap(start, end);
+				setupFunctionClassMap(start, end);
+				setupMarkersMap(start, end);
 				
 				set = sql.executeQuery("select "
-						+ "sa.accid as consensussnp_accid, sa._object_key, scc.chromosome, scc.startcoordinate, scc._varclass_key, scm._marker_key, scm._fxn_key "
+						+ "sa.accid as consensussnp_accid, sa._object_key, scc.chromosome, scc.startcoordinate, scc._varclass_key "
 						+ "from "
 						+ "snp.snp_accession sa, snp.snp_coord_cache scc "
 						+ "left join snp.snp_consensussnp_marker scm on "
@@ -104,7 +107,7 @@ public class SearchSNPIndexer extends Indexer {
 						+ "sa._object_key = scc._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and "
 						+ "scc.ismulticoord = 0 and "
 						+ "sa._object_key > " + start + " and sa._object_key <= " + end + " "
-						+ "group by sa.accid, sa._object_key, scc.chromosome, scc.startcoordinate, scc._varclass_key, scm._marker_key, scm._fxn_key "
+						+ "group by sa.accid, sa._object_key, scc.chromosome, scc.startcoordinate, scc._varclass_key "
 						+ "order by sa._object_key "
 				);
 
@@ -121,11 +124,12 @@ public class SearchSNPIndexer extends Indexer {
 					doc.addField("chromosome", set.getString("chromosome"));
 					doc.addField("startcoordinate", set.getDouble("startcoordinate"));
 					doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
-					if(functionMap.containsKey(set.getInt("_fxn_key"))) {
-						doc.addField("fxn", functionMap.get(set.getInt("_fxn_key")));
+					
+					if(functionClassesMap.containsKey(set.getInt("_object_key"))) {
+						doc.addField("fxn", functionClassesMap.get(set.getInt("_object_key")));
 					}
-					if(markerAccessionMap.containsKey(set.getInt("_marker_key"))) {
-						doc.addField("marker_accid", markerAccessionMap.get(set.getInt("_marker_key")));
+					if(markersMap.containsKey(set.getInt("_object_key"))) {
+						doc.addField("marker_accid", markersMap.get(set.getInt("_object_key")));
 					}
 					
 					doc.addField("strains", strainsMap.get(set.getInt("_object_key")));
@@ -152,6 +156,38 @@ public class SearchSNPIndexer extends Indexer {
 		}
 		
 		finish();
+	}
+	
+	private void setupMarkersMap(int start, int end) throws SQLException {
+		markersMap.clear();
+		
+		ResultSet set = sql.executeQuery("select scm._consensussnp_key, scm._marker_key from snp.snp_consensussnp_marker scm where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " and scm._fxn_key not in (" + excludeFunctionClasses + ") group by scm._consensussnp_key, scm._marker_key");
+		
+		while(set.next()) {
+			ArrayList<String> list = markersMap.get(set.getInt("_consensussnp_key"));
+			if(list == null) {
+				list = new ArrayList<String>();
+				markersMap.put(set.getInt("_consensussnp_key"), list);
+			}
+			list.add(markerMap.get(set.getInt("_marker_key")));
+		}
+		set.close();
+	}
+	
+	private void setupFunctionClassMap(int start, int end) throws SQLException {
+		functionClassesMap.clear();
+		
+		ResultSet set = sql.executeQuery("select scm._consensussnp_key, scm._fxn_key from snp.snp_consensussnp_marker scm where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " and scm._fxn_key not in (" + excludeFunctionClasses + ") group by scm._consensussnp_key, scm._fxn_key");
+		
+		while(set.next()) {
+			ArrayList<String> list = functionClassesMap.get(set.getInt("_consensussnp_key"));
+			if(list == null) {
+				list = new ArrayList<String>();
+				functionClassesMap.put(set.getInt("_consensussnp_key"), list);
+			}
+			list.add(functionMap.get(set.getInt("_fxn_key")));
+		}
+		set.close();
 	}
 
 	private void setupStrainsMap(int start, int end) throws SQLException {
