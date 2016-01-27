@@ -77,7 +77,7 @@ done
 
 date | tee -a ${LOG}
 echo "Run the SNP indexer for ${SOLR_URL_LIST}" | tee -a ${LOG}
-${JAVA} -DTHREADED=true -DPG_DBURL=${PG_DBURL} -DPG_DBUSER=${MGI_PUBLICUSER} -DPG_DBPASS=${MGI_PUBLICPASSWORD} -DSOLR_BASEURL=${SOLR_URL_LIST} ${SNPINDEXER}/dist/snpindexer.jar > ${LOG} 2>&1
+${JAVA} -DTHREADED=true -DPG_DBURL=${PG_DBURL} -DPG_DBUSER=${MGI_PUBLICUSER} -DPG_DBPASS=${MGI_PUBLICPASSWORD} -DSOLR_BASEURL=${SOLR_URL_LIST} -jar ${SNPINDEXER}/dist/snpindexer.jar > ${LOG} 2>&1
 if [ $? -ne 0 ]
 then
     echo "${SCRIPT_NAME} failed" | tee -a ${LOG}
