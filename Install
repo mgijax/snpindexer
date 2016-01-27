@@ -14,4 +14,6 @@ cd `dirname $0`
 
 . ./Configuration
 
+mkdir -p ${LOG_DIR}
+
 ${ANT}
