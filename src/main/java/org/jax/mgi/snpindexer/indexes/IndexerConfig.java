@@ -5,7 +5,7 @@ public enum IndexerConfig {
 	// (SolrCoreName, IndexerClass, ChunkSize, CommitTimeout, DB Fetch Size)
 	
 	ConsensusSNPIndexer("ConsensusSNPIndex", ConsensusSNPIndexer.class, 20000, 90000, 50000),
-	SearchSNPIndexer("SearchSNPIndex", SearchSNPIndexer.class, 500000, 90000, 25000)
+	SearchSNPIndexer("SearchSNPIndex", SearchSNPIndexer.class, 50000, 90000, 25000)
 	;
 	
 	// Batch size to process from the database
