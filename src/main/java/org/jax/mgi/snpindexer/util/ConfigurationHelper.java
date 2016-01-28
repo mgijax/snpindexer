@@ -15,17 +15,26 @@ public class ConfigurationHelper {
 	private static String user = null;
 	private static String password = null;
 	private static String solrBaseUrl = null;
+	private static String logFilePath = null;
+	private static String logFileName = null;
 	private static boolean debug = false;
 	private static boolean threaded = false;
 	private static Logger log;
 	
 	public static void init() {
 		InputStream in = ConfigurationHelper.class.getClassLoader().getResourceAsStream("log4j.properties");
+		Properties props = new Properties();
+		
 		if(in == null) {
 			System.out.println("No log4j.properties file. Output going to stdout this is most likely not what you want");
 			BasicConfigurator.configure();
 		} else {
-			PropertyConfigurator.configure(in);
+			try {
+				props.load(in);
+				logFileName = props.getProperty("log4j.appender.file.File");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		log = Logger.getLogger(ConfigurationHelper.class);
@@ -46,17 +55,18 @@ public class ConfigurationHelper {
 		solrBaseUrl = System.getProperty("SOLR_BASEURL");
 		if(solrBaseUrl != null) { log.info("Found: -D SOLR_BASEURL=" + solrBaseUrl); }
 		
+		logFilePath = System.getProperty("LOG_DIR");
+		if(logFilePath != null) { log.info("Found: -D LOG_DIR=" + logFilePath); }
+		
 		debug = "true".equals(System.getProperty("DEBUG"));
 		if(debug) { log.info("Found: -D DEBUG=" + debug); }
 		
 		threaded = "true".equals(System.getProperty("THREADED"));
 		if(threaded) { log.info("Found: -D THREADED=" + threaded); }
 		
-		log.info("Loading Properties via config.properties files");
+		log.info("Loading Properties via conf/config.properties file");
 		in = SQLExecutor.class.getClassLoader().getResourceAsStream("config.properties");
-		if(in == null) {
-			log.info("No config.properties assuming defaults");
-		} else {
+		if(in != null) {
 			try {
 				Properties configurationProperties = new Properties();
 				configurationProperties.load(in);
@@ -79,6 +89,10 @@ public class ConfigurationHelper {
 				if(solrBaseUrl == null) {
 					solrBaseUrl = configurationProperties.getProperty("solrBaseUrl");
 					if(solrBaseUrl != null) { log.info("Config File: solrBaseUrl=" + solrBaseUrl); }
+				}
+				if(logFilePath == null) {
+					logFilePath = configurationProperties.getProperty("logFilePath");
+					if(logFilePath != null) { log.info("Config File: logFilePath=" + logFilePath); }
 				}
 				if(!debug) {
 					debug = "true".equals(configurationProperties.getProperty("debug"));
@@ -115,6 +129,10 @@ public class ConfigurationHelper {
 			solrBaseUrl = System.getenv("SOLR_BASEURL");
 			if(solrBaseUrl != null) { log.info("Found Enviroment ENV[SOLR_BASEURL]=" + solrBaseUrl); }
 		}
+		if(logFilePath == null) {
+			logFilePath = System.getenv("LOG_DIR");
+			if(logFilePath != null) { log.info("Found Enviroment ENV[LOG_DIR]=" + logFilePath); }
+		}
 		if(!debug) {
 			debug = "true".equals(System.getenv("DEBUG"));
 			if(debug) { log.info("Found Enviroment ENV[DEBUG]=" + debug); }
@@ -124,7 +142,7 @@ public class ConfigurationHelper {
 			if(threaded) { log.info("Found Enviroment ENV[THREADED]=" + threaded); }
 		}
 		
-		log.info("Setting default values for properties that are null");
+		log.info("Loading Properties via default values");
 		if(driver == null) {
 			driver = "org.postgresql.Driver";
 			log.info("Setting default: driver=" + driver);
@@ -145,9 +163,20 @@ public class ConfigurationHelper {
 			solrBaseUrl = "http://localhost.jax.org:8983/solr";
 			log.info("Setting default: solrBaseUrl=" + solrBaseUrl);
 		}
+		if(logFilePath == null) {
+			logFilePath = "";
+			log.info("Setting default: logFilePath=" + logFilePath);
+		}
 		
+		if(logFilePath.length() > 0) {
+			logFilePath = logFilePath + "/" + logFileName;
+			props.setProperty("log4j.appender.file.File", logFilePath);
+		} else {
+			logFilePath = logFileName;
+		}
+		props.setProperty("log4j.appender.file.File", logFilePath);
 		printProperties();
-		
+		PropertyConfigurator.configure(props);
 	}
 	
 	public static void printProperties() {
@@ -157,6 +186,7 @@ public class ConfigurationHelper {
 		log.info("\tuser: " + user);
 		log.info("\tpassword: " + password);
 		log.info("\tsolrBaseUrl: " + solrBaseUrl);
+		log.info("\tlogFilePath: " + logFilePath);
 		log.info("\tdebug: " + debug);
 		log.info("\tthreaded: " + threaded);
 	}
@@ -175,6 +205,9 @@ public class ConfigurationHelper {
 	}
 	public static String getSolrBaseUrl() {
 		return solrBaseUrl;
+	}
+	public static String getLogFilePath() {
+		return logFilePath;
 	}
 	public static boolean isDebug() {
 		return debug;
