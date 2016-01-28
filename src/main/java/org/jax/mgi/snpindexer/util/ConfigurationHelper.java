@@ -163,17 +163,20 @@ public class ConfigurationHelper {
 			solrBaseUrl = "http://localhost.jax.org:8983/solr";
 			log.info("Setting default: solrBaseUrl=" + solrBaseUrl);
 		}
-		if(logFilePath == null) {
-			logFilePath = "";
+		
+		if(logFileName == null || logFileName.length() == 0) {
+			logFileName = "snpindexer.log";
+		}
+		
+		if(logFilePath != null && logFilePath.length() > 0) {
+			logFilePath = logFilePath + "/" + logFileName;
+			props.setProperty("log4j.appender.file.File", logFilePath);
+			log.info("Setting default: logFilePath=" + logFilePath);
+		} else {
+			logFilePath = logFileName;
 			log.info("Setting default: logFilePath=" + logFilePath);
 		}
 		
-		if(logFilePath.length() > 0) {
-			logFilePath = logFilePath + "/" + logFileName;
-			props.setProperty("log4j.appender.file.File", logFilePath);
-		} else {
-			logFilePath = logFileName;
-		}
 		props.setProperty("log4j.appender.file.File", logFilePath);
 		printProperties();
 		PropertyConfigurator.configure(props);
