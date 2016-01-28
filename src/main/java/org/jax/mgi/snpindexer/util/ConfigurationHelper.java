@@ -17,7 +17,6 @@ public class ConfigurationHelper {
 	private static String user = null;
 	private static String password = null;
 	private static List<String> solrBaseUrls = null;
-	private static String solrBaseUrl = null;
 	private static String logFilePath = null;
 	private static String logFileName = null;
 	private static boolean debug = false;
@@ -51,15 +50,12 @@ public class ConfigurationHelper {
 		
 		user = System.getProperty("PG_DBUSER");
 		if(user != null) { log.info("Found: -D PG_DBUSER=" + user); }
-		
+
 		password = System.getProperty("PG_DBPASS");
-
-		solrBaseUrls = parseCommaSeperatedProperty(System.getProperty("SOLR_BASEURL"));
-
 		if(password != null) { log.info("Found: -D PG_DBPASS=" + password); }
 		
-		solrBaseUrl = System.getProperty("SOLR_BASEURL");
-		if(solrBaseUrl != null) { log.info("Found: -D SOLR_BASEURL=" + solrBaseUrl); }
+		solrBaseUrls = parseCommaSeperatedProperty(System.getProperty("SOLR_BASEURL"));
+		if(solrBaseUrls != null) { log.info("Found: -D SOLR_BASEURL=" + solrBaseUrls); }
 		
 		logFilePath = System.getProperty("LOG_DIR");
 		if(logFilePath != null) { log.info("Found: -D LOG_DIR=" + logFilePath); }
@@ -78,7 +74,6 @@ public class ConfigurationHelper {
 				Properties configurationProperties = new Properties();
 				configurationProperties.load(in);
 
-				if(solrBaseUrls == null) solrBaseUrls = parseCommaSeperatedProperty(configurationProperties.getProperty("solrBaseUrl"));
 				if(driver == null) {
 					driver = configurationProperties.getProperty("driver");
 					if(driver != null) { log.info("Config File: driver=" + driver); }
@@ -95,9 +90,10 @@ public class ConfigurationHelper {
 					password = configurationProperties.getProperty("password");
 					if(password != null) { log.info("Config File: password=" + password); }
 				}
-				if(solrBaseUrl == null) {
-					solrBaseUrl = configurationProperties.getProperty("solrBaseUrl");
-					if(solrBaseUrl != null) { log.info("Config File: solrBaseUrl=" + solrBaseUrl); }
+				
+				if(solrBaseUrls == null) {
+					solrBaseUrls = parseCommaSeperatedProperty(configurationProperties.getProperty("solrBaseUrl"));
+					if(solrBaseUrls != null) { log.info("Config File: solrBaseUrl=" + solrBaseUrls); }
 				}
 				if(logFilePath == null) {
 					logFilePath = configurationProperties.getProperty("logFilePath");
@@ -119,9 +115,6 @@ public class ConfigurationHelper {
 		
 		log.info("Loading Properties via System ENV");
 
-		if(solrBaseUrls == null) solrBaseUrls = parseCommaSeperatedProperty(System.getenv("SOLR_BASEURL"));
-		if(solrBaseUrls == null) solrBaseUrls = parseCommaSeperatedProperty("http://localhost.jax.org:8983/solr");
-
 		if(driver == null) {
 			driver = System.getenv("PG_DBDRIVER");
 			if(driver != null) { log.info("Found Enviroment ENV[PG_DBDRIVER]=" + driver); }
@@ -138,9 +131,10 @@ public class ConfigurationHelper {
 			password = System.getenv("PG_DBPASS");
 			if(password != null) { log.info("Found Enviroment ENV[PG_DBPASS]=" + password); }
 		}
-		if(solrBaseUrl == null) {
-			solrBaseUrl = System.getenv("SOLR_BASEURL");
-			if(solrBaseUrl != null) { log.info("Found Enviroment ENV[SOLR_BASEURL]=" + solrBaseUrl); }
+		
+		if(solrBaseUrls == null) {
+			solrBaseUrls = parseCommaSeperatedProperty(System.getenv("SOLR_BASEURL"));
+			if(solrBaseUrls != null) { log.info("Found Enviroment ENV[SOLR_BASEURL]=" + solrBaseUrls); }
 		}
 		if(logFilePath == null) {
 			logFilePath = System.getenv("LOG_DIR");
@@ -172,9 +166,11 @@ public class ConfigurationHelper {
 			password = "mgdpub";
 			log.info("Setting default: password=" + password);
 		}
-		if(solrBaseUrl == null) {
-			solrBaseUrl = "http://localhost.jax.org:8983/solr";
-			log.info("Setting default: solrBaseUrl=" + solrBaseUrl);
+
+		if(solrBaseUrls == null) {
+			solrBaseUrls = new ArrayList<String>();
+			solrBaseUrls.add("http://localhost.jax.org:8983/solr");
+			log.info("Setting default: solrBaseUrl=" + solrBaseUrls);
 		}
 		
 		if(logFileName == null || logFileName.length() == 0) {
@@ -220,7 +216,6 @@ public class ConfigurationHelper {
 		log.info("\tuser: " + user);
 		log.info("\tpassword: " + password);
 		log.info("\tsolrBaseUrls: " + solrBaseUrls);
-		log.info("\tsolrBaseUrl: " + solrBaseUrl);
 		log.info("\tlogFilePath: " + logFilePath);
 		log.info("\tdebug: " + debug);
 		log.info("\tthreaded: " + threaded);

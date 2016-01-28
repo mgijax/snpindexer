@@ -194,20 +194,26 @@ public abstract class Indexer extends Thread {
 	}
 
 	public void setupServer() {
-		if(clients == null || clients.isEmpty()) {
+		if(clients == null) {
+			clients = new ArrayList<ConcurrentUpdateSolrClient>();
+		}
+		if(clients.isEmpty()) {
 			for(String solrUrl: ConfigurationHelper.getSolrBaseUrls()) {
-				log.info("Setup Solr Client to use Solr Urls: " + solrUrl + "/" + config.getCoreName());
+				log.info("Setup Solr Client to use Solr Url: " + solrUrl + "/" + config.getCoreName());
 
 				// Note queue size here is the size of the request that the amount of documents
 				// So if adding documents in batches you will have queue * document batch size in
 				// memory at any given time
-				
+
 				ConcurrentUpdateSolrClient client = new ConcurrentUpdateSolrClient(solrUrl + "/" + config.getCoreName(), 160, 8);
 				client.setConnectionTimeout(100000);
 				clients.add(client);
 			}
 		}
-		if(adminClients == null || adminClients.isEmpty()) {
+		if(adminClients == null) {
+			adminClients = new ArrayList<ConcurrentUpdateSolrClient>();
+		}
+		if(adminClients.isEmpty()) {
 			for(String solrUrl: ConfigurationHelper.getSolrBaseUrls()) {
 				ConcurrentUpdateSolrClient adminClient = new ConcurrentUpdateSolrClient(solrUrl, 1, 1);
 				adminClients.add(adminClient);
