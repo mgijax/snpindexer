@@ -35,6 +35,7 @@ The order of precedence is the following:
     * -DPG_DBUSER=mgd\_public
     * -DPG_DBPASS=mgdpub
     * -DSOLR_BASEURL=http://localhost.jax.org:8983/solr
+    * -DLOG_DIG=/path/to/save/logs
     * -DDEBUG=false
     * -DTHREADED=false
   2. The configuration file conf/config.properties:
@@ -43,6 +44,7 @@ The order of precedence is the following:
     * user=mgd_public
     * passowrd=mgdpub
     * solrBaseUrl=http://localhost.jax.org:8983/solr
+    * logFilePath=/path/to/save/logs
     * debug=false
     * threaded=false
   3. The system enviroment:
@@ -51,6 +53,7 @@ The order of precedence is the following:
     * export PG\_DBUSER=mgd\_public
     * export PG\_DBPASS=mgdpub
     * export SOLR_BASEURL=http://localhost.jax.org:8983/solr
+    * export LOG_DIG=/path/to/save/logs
     * export DEBUG=false
     * export THREADED=false
   4. Defaults if no configuration is provided it will use the following:
@@ -59,6 +62,7 @@ The order of precedence is the following:
     * user=mgd_public
     * passowrd=mgdpub
     * solrBaseUrl=http://localhost.jax.org:8983/solr
+    * logFilePath=
     * debug=false
     * threaded=false
 
@@ -79,6 +83,9 @@ This is the URL for the solr install. The snpIndexer will try to connect to SOLR
     export SOLR_BASEURL=http://localhost1.jax.org:8983/solr,http://localhost2.jax.org:8983/solr
     
  If adding documents to one of the solr's fail, then the whole indexer will fail.
+
+#### LOG_DIR
+This will be the file path without the filename where you would like the snpindexer to write its log files out to. This value should typically can be taken from MGIConfig \$LOG_DIR which would default to /data/loads/snpindexer/logs
 
 #### DEBUG
 This is used to debug the application, set this to true and re run the application all output will be placed in a logging.log file.
@@ -109,6 +116,7 @@ If one decides to the run the jar file by itself it can be running the following
 			-DPG_DBUSER=mgd_other \
 			-DPG_DBPASS=pasword \
 			-DSOLR_BASEURL=http://snpsolr.jax.org:8983/solr \
+			-DLOG_DIR=/path/to/save/logs
 			-jar snpindexer.jar
 			
   4. Running with ENV vars set:
