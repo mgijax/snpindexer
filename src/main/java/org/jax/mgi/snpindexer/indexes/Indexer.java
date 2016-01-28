@@ -3,6 +3,7 @@ package org.jax.mgi.snpindexer.indexes;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -29,6 +30,8 @@ public abstract class Indexer extends Thread {
 	private Date lastTime = new Date();
 	private Date lastDocTime = new Date();
 	protected IndexerConfig config;
+	protected Runtime runtime = Runtime.getRuntime();
+	protected DecimalFormat df = new DecimalFormat("#.00");
 
 	public Indexer(IndexerConfig config) {
 		this.config = config;
@@ -48,6 +51,8 @@ public abstract class Indexer extends Thread {
 		try {
 			for(ConcurrentUpdateSolrClient client: clients) {
 				client.add(docs);
+				checkCommit();
+				checkMemory();
 			}
 			Date now = new Date();
 			if(now.getTime() - lastDocTime.getTime() > config.getCommitFreq()) {
@@ -61,6 +66,15 @@ public abstract class Indexer extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
+		}
+	}
+
+	private void checkCommit() {
+		Date now = new Date();
+		if(now.getTime() - lastDocTime.getTime() > config.getCommitFreq()) {
+			log.info("Commit timeout: " + (now.getTime() - lastDocTime.getTime()) + " running commit on current documents");
+			commit();
+			lastDocTime = now;
 		}
 	}
 
@@ -84,6 +98,23 @@ public abstract class Indexer extends Thread {
 				System.exit(1);
 			}
 		}
+	}
+
+	private void checkMemory() {
+		if(memoryPercent() > 0.8) {
+			log.info("Memory timeout: " + df.format(memoryPercent() * 100) + "% running blockUntilFinished on current documents");
+			for(ConcurrentUpdateSolrClient client: clients) {
+				client.blockUntilFinished();
+			}
+			log.info("Used Mem: " + (runtime.totalMemory() - runtime.freeMemory()));
+			log.info("Free Mem: " + runtime.freeMemory());
+			log.info("Total Mem: " + runtime.totalMemory());
+			log.info("Max Memory: " + runtime.maxMemory());
+		}
+	}
+	
+	public double memoryPercent() {
+		return ((double)runtime.totalMemory() - (double)runtime.freeMemory()) / (double)runtime.maxMemory();
 	}
 
 	public void finish() {
@@ -113,7 +144,7 @@ public abstract class Indexer extends Thread {
 		if(percent > 0) {
 			int perms = (int)(diff / percent);
 			Date end = new Date(startTime.getTime() + perms);
-			log.info("Batch: " + current + " of " + total + " took: " + time + "ms to process " + size + " records at a rate of: " + ((size * 1000) / time) + "r/s, Percentage complete: " + (int)(percent * 100) + "%, Estimated Finish: " + end);
+			log.info("Batch: " + current + " of " + total + " took: " + time + "ms to process " + size + " records at a rate of: " + ((size * 1000) / time) + "r/s, Memory: " + df.format(memoryPercent() * 100) + "%, Percentage complete: " + (int)(percent * 100) + "%, Estimated Finish: " + end);
 		} else {
 			log.info("Batch: " + current + " of " + total + " took: " + time + "ms to process " + size + " records at a rate of: " + ((size * 1000) / time) + "r/s");
 		}
@@ -175,7 +206,6 @@ public abstract class Indexer extends Thread {
 				client.setConnectionTimeout(100000);
 				clients.add(client);
 			}
-			
 		}
 		if(adminClients == null || adminClients.isEmpty()) {
 			for(String solrUrl: ConfigurationHelper.getSolrBaseUrls()) {

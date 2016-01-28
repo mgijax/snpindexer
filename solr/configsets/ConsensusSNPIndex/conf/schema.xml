@@ -111,6 +111,7 @@
    -->   
    <field name="consensussnp_accid" type="string" indexed="true" stored="true" multiValued="false" /> 
    <field name="objectJSONData" type="string" indexed="false" stored="true" multiValued="false" /> 
+   <field name="markerIds" type="string" indexed="true" stored="true" multiValued="true" /> 
 
    <!-- Dynamic field definitions allow using convention over configuration
        for fields via the specification of patterns to match field names. 

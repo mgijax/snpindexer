@@ -6,6 +6,7 @@ dist/
 solr/ConsensusSNPIndex/
 solr/SearchSNPIndex/
 config.properties
-logging.log
+snpindexer.log
 lib/snpdatamodel.jar
+lib/*.checksum
 Configuration

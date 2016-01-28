@@ -1,0 +1,89 @@
+#!/bin/sh
+#
+#  buildSolrIndex
+###########################################################################
+#
+#  Purpose:
+#
+#      This script is a wrapper for building the SNP Solr indexes for a
+#      given list of Solr instances.
+#
+#  Usage:
+#
+#      buildSolrIndex {Solr URL List}
+#
+#          The Solr URL List is a list of one or more Solr instances
+#          that are to receive the SNP indexes.
+#
+#  Env Vars:
+#
+#      - See Configuration file
+#
+#      - See master.config.sh (mgiconfig product)
+#
+#  Inputs:  None
+#
+#  Outputs:
+#
+#      - Log file for the script (${LOG})
+#
+#  Exit Codes:
+#
+#      0:  Successful completion
+#      1:  Fatal error occurred
+#
+#  Assumes:  Nothing
+#
+#  Implementation:
+#
+#      This script will perform the following steps:
+#
+#      1) Source the configuration file to establish the environment.
+#      2) Build a comma-separated list of Solr URLs from the argument list.
+#      3) Invoke the SNP indexer.
+#
+#  Notes:  None
+#
+###########################################################################
+
+cd `dirname $0`; . ../Configuration
+
+SCRIPT_NAME=`basename $0`
+
+if [ $# -lt 1 ]
+then
+    echo "Usage: $0 {Solr URL List}"
+    exit 1
+fi
+
+LOG=${LOG_DIR}/${SCRIPT_NAME}.log
+rm -f ${LOG}
+touch ${LOG}
+
+echo "$0" >> ${LOG}
+env | sort >> ${LOG}
+
+SOLR_URL_LIST=""
+
+for URL in $*
+do
+    if [ "${SOLR_URL_LIST}" = "" ]
+    then
+        SOLR_URL_LIST=${URL}
+    else
+        SOLR_URL_LIST=${SOLR_URL_LIST},${URL}
+    fi
+done
+
+date | tee -a ${LOG}
+echo "Run the SNP indexer for ${SOLR_URL_LIST}" | tee -a ${LOG}
+${JAVA} -DTHREADED=true -DPG_DBURL=${PG_DBURL} -DPG_DBUSER=${MGI_PUBLICUSER} -DPG_DBPASS=${MGI_PUBLICPASSWORD} -DSOLR_BASEURL=${SOLR_URL_LIST} -jar ${SNPINDEXER}/dist/snpindexer.jar > ${LOG} 2>&1
+if [ $? -ne 0 ]
+then
+    echo "${SCRIPT_NAME} failed" | tee -a ${LOG}
+    date | tee -a ${LOG}
+    exit 1
+fi
+date | tee -a ${LOG}
+
+exit 0

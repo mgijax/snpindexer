@@ -110,13 +110,12 @@
      tokens
    -->   
    <field name="consensussnp_accid" type="string" indexed="true" stored="true" multiValued="false" /> 
-   <field name="chromosome" type="string" indexed="true" stored="true" multiValued="false" /> 
+   <field name="chromosome" type="chromosome" indexed="true" stored="true" multiValued="false" /> 
    <field name="startcoordinate" type="double" indexed="true" stored="true" multiValued="false" /> 
-   <field name="ismulticoord" type="boolean" indexed="true" stored="true" multiValued="false" /> 
    <field name="varclass" type="string" indexed="true" stored="true" multiValued="false" /> 
-   <field name="fxn" type="string" indexed="true" stored="true" multiValued="false" /> 
-   <field name="marker_accid" type="string" indexed="true" stored="true" multiValued="false" /> 
-   <field name="strain" type="string" indexed="true" stored="true" multiValued="false" /> 
+   <field name="fxn" type="string" indexed="true" stored="true" multiValued="true" /> 
+   <field name="marker_accid" type="string" indexed="true" stored="true" multiValued="true" /> 
+   <field name="strains" type="string" indexed="true" stored="true" multiValued="true" /> 
 
    <!-- Dynamic field definitions allow using convention over configuration
        for fields via the specification of patterns to match field names. 
@@ -157,6 +156,7 @@
        single-valued and either required or have a default value.
       -->
     <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
+    <fieldType name="chromosome" class="solr.EnumField" enumsConfig="enumsConfig.xml" enumName="chromosome" />
 
     <!-- boolean type: "true" or "false" -->
     <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>

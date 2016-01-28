@@ -16,7 +16,7 @@
 	<property environment="env"/>
 
 	<path id="build.classpath">
-		<fileset dir="lib">
+		<fileset dir="lib" excludes="*.checksum">
 			<include name="**/*.jar"/>
 		</fileset>
 		<fileset includes="snpdatamodel.jar" dir="${snpdatamodel.dir}" />
@@ -66,7 +66,7 @@
 		<copy file="conf/config.properties" tofile="build/config.properties" failonerror="false" overwrite="true" />
 		<copy file="${snpdatamodel.dir}/snpdatamodel.jar" todir="lib" overwrite="true" />
 		<jar jarfile="dist/snpindexer.jar" basedir="build" excludes="**/*Test.class">
-			<zipgroupfileset dir="lib" />
+			<zipgroupfileset dir="lib" excludes="**/*.checksum"/>
 			<!-- <metainf dir="src/main/java/META-INF" includes="*.xml"/> -->
 			<manifest>
 				<attribute name="Main-Class" value="org.jax.mgi.snpindexer.Main" />
