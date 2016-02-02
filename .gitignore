@@ -5,6 +5,7 @@ dist/
 .settings/
 solr/ConsensusSNPIndex/
 solr/SearchSNPIndex/
+solr/AlleleSNPIndex/
 config.properties
 snpindexer.log
 lib/snpdatamodel.jar
