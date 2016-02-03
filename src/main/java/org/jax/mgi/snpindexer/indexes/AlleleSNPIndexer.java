@@ -59,6 +59,8 @@ public class AlleleSNPIndexer extends Indexer {
 						+ "from "
 						+ "snp.snp_accession sa, snp.snp_consensussnp_strainallele scs "
 						+ "where "
+						// This next part of the query needs to be relaxed once we bring in the Mixed and In-Del's
+						+ "scs.allele in ('A', 'C', 'G', 'T') and "
 						+ "sa._object_key = scs._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and "
 						+ "sa._object_key > " + start + " and sa._object_key <= " + end + " group by sa.accid, sa._object_key, scs.allele order by sa._object_key "
 				);
@@ -73,7 +75,23 @@ public class AlleleSNPIndexer extends Indexer {
 					
 					doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
 					doc.addField("allele", set.getString("allele"));
+					
+					// Strains that have this allele
 					doc.addField("strains", allelesStrainsMap.get(set.getInt("_object_key")).get(set.getString("allele")));
+					
+					// Compute the strains that have a different allele
+					HashMap<String, ArrayList<String>> alleles = allelesStrainsMap.get(set.getInt("_object_key"));
+					
+					ArrayList<String> diffStrains = new ArrayList<String>();
+					
+					for(String allele: alleles.keySet()) {
+						if(!allele.equals(set.getString("allele"))) {
+							diffStrains.addAll(alleles.get(allele));
+						}
+					}
+					
+					doc.addField("diffstrains", diffStrains);
+					
 
 					docCache.add(doc);
 
@@ -100,7 +118,7 @@ public class AlleleSNPIndexer extends Indexer {
 	private void setupAllelesStrainsMap(int start, int end) throws SQLException {
 		allelesStrainsMap.clear();
 		
-		ResultSet set = sql.executeQuery("select scs._consensussnp_key, scs._mgdstrain_key, scs.allele from snp.snp_consensussnp_strainallele scs where scs._consensussnp_key > " + start + " and scs._consensussnp_key <= " + end + " ");
+		ResultSet set = sql.executeQuery("select scs._consensussnp_key, scs._mgdstrain_key, scs.allele from snp.snp_consensussnp_strainallele scs where scs.allele in ('A', 'C', 'G', 'T') and scs._consensussnp_key > " + start + " and scs._consensussnp_key <= " + end + " ");
 		
 		while (set.next()) {
 			HashMap<String, ArrayList<String>> list = allelesStrainsMap.get(set.getInt("_consensussnp_key"));
