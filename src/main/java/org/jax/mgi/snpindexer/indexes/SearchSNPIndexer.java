@@ -134,8 +134,6 @@ public class SearchSNPIndexer extends Indexer {
 					
 					doc.addField("strains", strainsMap.get(set.getInt("_object_key")));
 					
-					//doc.addField("strain", strainMap.get(set.getInt("_mgdstrain_key")));
-
 					docCache.add(doc);
 
 				}

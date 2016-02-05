@@ -6,7 +6,7 @@ public enum IndexerConfig {
 	
 	ConsensusSNPIndexer("ConsensusSNPIndex", ConsensusSNPIndexer.class, 20000, 90000, 50000),
 	SearchSNPIndexer("SearchSNPIndex", SearchSNPIndexer.class, 50000, 90000, 25000),
-	AlleleSNPIndexer("AlleleSNPIndex", AlleleSNPIndexer.class, 50000, 30000, 25000)
+	AlleleSNPIndexer("AlleleSNPIndex", AlleleSNPIndexer.class, 50000, 75000, 25000)
 	;
 	
 	// Batch size to process from the database

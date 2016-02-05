@@ -9,11 +9,20 @@ import org.apache.solr.common.SolrInputDocument;
 
 public class AlleleSNPIndexer extends Indexer {
 
-
+	private HashMap<Integer, String> variationMap = new HashMap<Integer, String>();
+	
+	private HashMap<Integer, String> functionMap = new HashMap<Integer, String>();
+	private HashMap<Integer, String> markerMap = new HashMap<Integer, String>();
 	private HashMap<Integer, String> strainMap = new HashMap<Integer, String>();
 	
+	private HashMap<Integer, ArrayList<String>> strainsMap = new HashMap<Integer, ArrayList<String>>();
+	private HashMap<Integer, ArrayList<String>> functionClassesMap = new HashMap<Integer, ArrayList<String>>();
+	private HashMap<Integer, ArrayList<String>> markersMap = new HashMap<Integer, ArrayList<String>>();
+
 	// <snpid, allele, List<StrainIds>>
 	private HashMap<Integer, HashMap<String, ArrayList<String>>> allelesStrainsMap = new HashMap<Integer, HashMap<String, ArrayList<String>>>();
+	
+	private StringBuffer excludeFunctionClasses = new StringBuffer();
 	
 	public AlleleSNPIndexer(IndexerConfig config) {
 		super(config);
@@ -26,15 +35,50 @@ public class AlleleSNPIndexer extends Indexer {
 
 		try {
 
+			log.info("Starting Load Function Type Map");
+			ResultSet set = sql.executeQuery("select _term_key, term from mgd.voc_term where _vocab_key = 49");
+			
+			while (set.next()) {
+				
+				Integer key = set.getInt("_term_key");
+				String fc = set.getString("term");
+				
+				if(fc.equals("within coordinates of") || fc.equals("within distance of")) {
+					if(excludeFunctionClasses.length() > 0){
+						excludeFunctionClasses.append(',');
+				    }
+					excludeFunctionClasses.append(key);
+				}
+				
+				functionMap.put(key, fc);
+			}
+			set.close();
+			log.info("Finished Load Function Type Map");
+
+			log.info("Starting Load Variation Type Map");
+			set = sql.executeQuery("select _term_key, term from mgd.voc_term where _vocab_key = 50");
+			while (set.next()) {
+				variationMap.put(set.getInt("_term_key"), set.getString("term"));
+			}
+			set.close();
+			log.info("Finished Load Variation Type Map");
+
 			log.info("Starting Load Strains Map");
-			ResultSet set = sql.executeQuery("select _mgdstrain_key, strain from snp.snp_strain");
+			set = sql.executeQuery("select _mgdstrain_key, strain from snp.snp_strain");
 			while (set.next()) {
 				strainMap.put(set.getInt("_mgdstrain_key"), set.getString("strain"));
 			}
 			set.close();
 			log.info("Finished Load Strains Map");
 
+			log.info("Starting Load Marker Accession Map");
+			set = sql.executeQuery("select a.accid, m._marker_key from mgd.mrk_marker m, mgd.acc_accession a where m._marker_key = a._object_key and a._logicaldb_key = 1 and a._mgitype_key = 2 and a.preferred = 1 and m._organism_key = 1 and m._marker_status_key in (1, 3)");
 			
+			while (set.next()) {
+				markerMap.put(set.getInt("_marker_key"), set.getString("accid"));
+			}
+			set.close();
+			log.info("Finished Load Marker Accession Map");
 			
 			set = sql.executeQuery("select max(sa._object_key) as maxKey from snp.snp_accession sa where sa._logicaldb_key = 73 and sa._mgitype_key = 30");
 
@@ -52,17 +96,23 @@ public class AlleleSNPIndexer extends Indexer {
 				int start = i * chunkSize;
 				int end = (start + chunkSize);
 				
+				setupStrainsMap(start, end);
+				setupFunctionClassMap(start, end);
+				setupMarkersMap(start, end);
 				setupAllelesStrainsMap(start, end);
 				
 				set = sql.executeQuery("select "
-						+ "sa.accid as consensussnp_accid, sa._object_key, scs.allele "
+						+ "sa.accid as consensussnp_accid, sa._object_key, scc.chromosome, scc.startcoordinate, scc._varclass_key "
 						+ "from "
-						+ "snp.snp_accession sa, snp.snp_consensussnp_strainallele scs "
+						+ "snp.snp_accession sa, snp.snp_coord_cache scc "
+						+ "left join snp.snp_consensussnp_marker scm on "
+						+ "scc._consensussnp_key = scm._consensussnp_key and scm._fxn_key not in (" + excludeFunctionClasses + ") "
 						+ "where "
-						// This next part of the query needs to be relaxed once we bring in the Mixed and In-Del's
-						+ "scs.allele in ('A', 'C', 'G', 'T') and "
-						+ "sa._object_key = scs._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and "
-						+ "sa._object_key > " + start + " and sa._object_key <= " + end + " group by sa.accid, sa._object_key, scs.allele order by sa._object_key "
+						+ "sa._object_key = scc._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and "
+						+ "scc.ismulticoord = 0 and "
+						+ "sa._object_key > " + start + " and sa._object_key <= " + end + " "
+						+ "group by sa.accid, sa._object_key, scc.chromosome, scc.startcoordinate, scc._varclass_key "
+						+ "order by sa._object_key "
 				);
 
 				ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
@@ -71,29 +121,35 @@ public class AlleleSNPIndexer extends Indexer {
 				
 				while (set.next()) {
 
-					SolrInputDocument doc = new SolrInputDocument();
-					
-					doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
-					doc.addField("allele", set.getString("allele"));
-					
-					// Strains that have this allele
-					doc.addField("strains", allelesStrainsMap.get(set.getInt("_object_key")).get(set.getString("allele")));
-					
-					// Compute the strains that have a different allele
-					HashMap<String, ArrayList<String>> alleles = allelesStrainsMap.get(set.getInt("_object_key"));
-					
-					ArrayList<String> diffStrains = new ArrayList<String>();
-					
-					for(String allele: alleles.keySet()) {
-						if(!allele.equals(set.getString("allele"))) {
-							diffStrains.addAll(alleles.get(allele));
+					if(allelesStrainsMap.get(set.getInt("_object_key")) != null && allelesStrainsMap.get(set.getInt("_object_key")).keySet().size() > 0) {
+						for(String allele: allelesStrainsMap.get(set.getInt("_object_key")).keySet()) {
+							SolrInputDocument doc = createDocument(set);
+							
+							doc.addField("allele", allele);
+							
+							// Strains that have this allele
+							doc.addField("samestrains", allelesStrainsMap.get(set.getInt("_object_key")).get(allele));
+							
+							// Compute the strains that have a different allele
+							HashMap<String, ArrayList<String>> alleles = allelesStrainsMap.get(set.getInt("_object_key"));
+							
+							ArrayList<String> diffStrains = new ArrayList<String>();
+							
+							for(String loopAllele: alleles.keySet()) {
+								if(!loopAllele.equals(allele)) {
+									diffStrains.addAll(alleles.get(loopAllele));
+								}
+							}
+							
+							doc.addField("diffstrains", diffStrains);
+							
+							
+							docCache.add(doc);
 						}
+					} else {
+						SolrInputDocument doc = createDocument(set);
+						docCache.add(doc);
 					}
-					
-					doc.addField("diffstrains", diffStrains);
-					
-
-					docCache.add(doc);
 
 				}
 				set.close();
@@ -114,6 +170,75 @@ public class AlleleSNPIndexer extends Indexer {
 		
 		finish();
 	}
+	
+	private SolrInputDocument createDocument(ResultSet set) throws SQLException {
+		SolrInputDocument doc = new SolrInputDocument();
+		
+		doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
+		
+		doc.addField("chromosome", set.getString("chromosome"));
+		doc.addField("startcoordinate", set.getDouble("startcoordinate"));
+		doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
+		
+		if(functionClassesMap.containsKey(set.getInt("_object_key"))) {
+			doc.addField("fxn", functionClassesMap.get(set.getInt("_object_key")));
+		}
+		if(markersMap.containsKey(set.getInt("_object_key"))) {
+			doc.addField("marker_accid", markersMap.get(set.getInt("_object_key")));
+		}
+		
+		doc.addField("strains", strainsMap.get(set.getInt("_object_key")));
+		
+		return doc;
+	}
+
+	private void setupMarkersMap(int start, int end) throws SQLException {
+		markersMap.clear();
+		
+		ResultSet set = sql.executeQuery("select scm._consensussnp_key, scm._marker_key from snp.snp_consensussnp_marker scm where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " and scm._fxn_key not in (" + excludeFunctionClasses + ") group by scm._consensussnp_key, scm._marker_key");
+		
+		while(set.next()) {
+			ArrayList<String> list = markersMap.get(set.getInt("_consensussnp_key"));
+			if(list == null) {
+				list = new ArrayList<String>();
+				markersMap.put(set.getInt("_consensussnp_key"), list);
+			}
+			list.add(markerMap.get(set.getInt("_marker_key")));
+		}
+		set.close();
+	}
+	
+	private void setupFunctionClassMap(int start, int end) throws SQLException {
+		functionClassesMap.clear();
+		
+		ResultSet set = sql.executeQuery("select scm._consensussnp_key, scm._fxn_key from snp.snp_consensussnp_marker scm where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " and scm._fxn_key not in (" + excludeFunctionClasses + ") group by scm._consensussnp_key, scm._fxn_key");
+		
+		while(set.next()) {
+			ArrayList<String> list = functionClassesMap.get(set.getInt("_consensussnp_key"));
+			if(list == null) {
+				list = new ArrayList<String>();
+				functionClassesMap.put(set.getInt("_consensussnp_key"), list);
+			}
+			list.add(functionMap.get(set.getInt("_fxn_key")));
+		}
+		set.close();
+	}
+
+	private void setupStrainsMap(int start, int end) throws SQLException {
+		strainsMap.clear();
+		
+		ResultSet set = sql.executeQuery("select scs._consensussnp_key, scs._mgdstrain_key from snp.snp_consensussnp_strainallele scs where scs._consensussnp_key > " + start + " and scs._consensussnp_key <= " + end + " ");
+		
+		while (set.next()) {
+			ArrayList<String> list = strainsMap.get(set.getInt("_consensussnp_key"));
+			if(list == null) {
+				list = new ArrayList<String>();
+				strainsMap.put(set.getInt("_consensussnp_key"), list);
+			}
+			list.add(strainMap.get(set.getInt("_mgdstrain_key")));
+		}
+		set.close();
+	}
 
 	private void setupAllelesStrainsMap(int start, int end) throws SQLException {
 		allelesStrainsMap.clear();
@@ -127,14 +252,14 @@ public class AlleleSNPIndexer extends Indexer {
 				allelesStrainsMap.put(set.getInt("_consensussnp_key"), list);
 			}
 			
-			ArrayList<String> strainIdList = list.get(set.getString("allele"));
-			if(strainIdList == null) {
-				strainIdList = new ArrayList<String>();
-				list.put(set.getString("allele"), strainIdList);
+			ArrayList<String> strainList = list.get(set.getString("allele"));
+			if(strainList == null) {
+				strainList = new ArrayList<String>();
+				list.put(set.getString("allele"), strainList);
 			}
-			strainIdList.add(strainMap.get(set.getInt("_mgdstrain_key")));
+			strainList.add(strainMap.get(set.getInt("_mgdstrain_key")));
 		}
 		set.close();
 	}
-
+	
 }
