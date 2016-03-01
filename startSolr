@@ -13,4 +13,4 @@ export SOLR_PORT=$2
 
 export SOLR_LOGS_DIR=${SOLR_INDEX_PATH}/logs
 
-${SOLR} start -s ${SOLR_INDEX_PATH} -p ${SOLR_PORT}
+${SOLR} start -s ${SOLR_INDEX_PATH} -p ${SOLR_PORT} -m 6g
