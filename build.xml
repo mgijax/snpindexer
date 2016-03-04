@@ -36,7 +36,7 @@
 
 	<target name="clean" description="clean up" >
 		<delete dir="build"/>
-		<delete dir="dist"/>
+		<delete dir="dist/snpindexer.jar"/>
 		<delete dir="target"/>
 		<delete dir="${unittestoutput.dir}"/>
 	</target>	
