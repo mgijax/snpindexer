@@ -353,7 +353,7 @@ public class ConsensusSNPIndexer extends Indexer {
 	private void setupMarkers() throws SQLException {
 		if(markers == null) {
 			markers = new HashMap<Integer, Marker>();
-			ResultSet set = sql.executeQuery("select a.accid, m.name, m.symbol, m._marker_key from mgd.mrk_marker m, mgd.acc_accession a where m._marker_key = a._object_key and a._logicaldb_key = 1 and a._mgitype_key = 2 and a.preferred = 1 and m._organism_key = 1 and m._marker_status_key in (1, 3)");
+			ResultSet set = sql.executeQuery("select a.accid, m.name, m.symbol, m._marker_key from mgd.mrk_marker m, mgd.acc_accession a where m._marker_key = a._object_key and a._logicaldb_key = 1 and a._mgitype_key = 2 and a.preferred = 1 and m._organism_key = 1 and m._marker_status_key = 1");
 			
 			while(set.next()) {
 				Marker m = new Marker();
