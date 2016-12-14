@@ -273,7 +273,7 @@ public class ConsensusSNPIndexer extends Indexer {
 
 	private void populatePopulations(HashMap<Integer, SubSNP> snps, int start, int end) throws SQLException {
 		ResultSet set = sql.executeQuery("select ssa._subsnp_key, ssa._population_key, ssa._mgdstrain_key, ssa.allele from snp.snp_subsnp sss, snp.snp_subsnp_strainallele ssa where sss._consensussnp_key > " + start + " and sss._consensussnp_key <= " + end + " and sss._subsnp_key = ssa._subsnp_key");
-		// TODO
+
 		while(set.next()) {
 			int snpKey = set.getInt("_subsnp_key");
 			int popKey = set.getInt("_population_key");
