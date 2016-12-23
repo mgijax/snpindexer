@@ -42,6 +42,8 @@ public class ConfigurationHelper {
 		log = Logger.getLogger(ConfigurationHelper.class);
 		log.info("Loading System Properties via -D paramaters");
 		
+		
+		// Reads this next set of params from the command line -D params
 		driver = System.getProperty("PG_DBDRIVER");
 		if(driver != null) { log.info("Found: -D PG_DBDRIVER=" + driver); }
 		
@@ -74,6 +76,7 @@ public class ConfigurationHelper {
 				Properties configurationProperties = new Properties();
 				configurationProperties.load(in);
 
+				// Reads these setup of params from the configuration file
 				if(driver == null) {
 					driver = configurationProperties.getProperty("driver");
 					if(driver != null) { log.info("Config File: driver=" + driver); }
@@ -115,6 +118,7 @@ public class ConfigurationHelper {
 		
 		log.info("Loading Properties via System ENV");
 
+		// Reads the next set of params from the ENV
 		if(driver == null) {
 			driver = System.getenv("PG_DBDRIVER");
 			if(driver != null) { log.info("Found Enviroment ENV[PG_DBDRIVER]=" + driver); }
@@ -149,6 +153,7 @@ public class ConfigurationHelper {
 			if(threaded) { log.info("Found Enviroment ENV[THREADED]=" + threaded); }
 		}
 		
+		// Defaults any params that were not set from above
 		log.info("Loading Properties via default values");
 		if(driver == null) {
 			driver = "org.postgresql.Driver";
