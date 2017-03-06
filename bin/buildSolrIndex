@@ -75,6 +75,12 @@ do
     fi
 done
 
+#
+# The indexer keeps rolling log files each time it's run, so remove the ones
+# that are more than 30 days old.
+#
+find ${LOG_DIR}/snpindexer.log* -mtime +30 -exec rm -f {} \;
+
 date | tee -a ${LOG}
 echo "Run the SNP indexer for ${SOLR_URL_LIST}" | tee -a ${LOG}
 ${JAVA} -DTHREADED=true -DPG_DBURL=${PG_DBURL} -DPG_DBUSER=${MGI_PUBLICUSER} -DPG_DBPASS=${MGI_PUBLICPASSWORD} -DLOG_DIR=${LOG_DIR} -DSOLR_BASEURL=${SOLR_URL_LIST} -jar ${SNPINDEXER}/dist/snpindexer.jar >> ${LOG} 2>&1
