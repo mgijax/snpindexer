@@ -272,7 +272,12 @@ public class ConsensusSNPIndexer extends Indexer {
 	}
 
 	private void populatePopulations(HashMap<Integer, SubSNP> snps, int start, int end) throws SQLException {
-		ResultSet set = sql.executeQuery("select ssa._subsnp_key, ssa._population_key, ssa._mgdstrain_key, ssa.allele from snp.snp_subsnp sss, snp.snp_subsnp_strainallele ssa where sss._consensussnp_key > " + start + " and sss._consensussnp_key <= " + end + " and sss._subsnp_key = ssa._subsnp_key");
+		ResultSet set = sql.executeQuery(
+			"select ssa._subsnp_key, ssa._population_key, ssa._mgdstrain_key, ssa.allele "
+			+ "from snp.snp_subsnp sss, snp.snp_subsnp_strainallele ssa "
+			+ "where sss._consensussnp_key > " + start
+			+ " and sss._consensussnp_key <= " + end
+			+ " and sss._subsnp_key = ssa._subsnp_key");
 
 		while(set.next()) {
 			int snpKey = set.getInt("_subsnp_key");
@@ -333,7 +338,12 @@ public class ConsensusSNPIndexer extends Indexer {
 			populationsByPopulationKey = new HashMap<Integer, PopulationSNP>();
 			populationsBySubHandleKey = new HashMap<Integer, PopulationSNP>();
 			
-			ResultSet set = sql.executeQuery("select sp._population_key, sa.accid, sp.subhandle, sp._subhandle_key, sp.name from snp.snp_population sp, snp.snp_accession sa where sp._population_key = sa._object_key and sa._logicaldb_key = 76 and sa._mgitype_key = 33");
+			ResultSet set = sql.executeQuery(
+				"select sp._population_key, sa.accid, sp.subhandle, sp._subhandle_key, sp.name "
+				+ "from snp.snp_population sp "
+				+ "left outer join snp.snp_accession sa on ("
+				+ " sp._population_key = sa._object_key "
+				+ " and sa._logicaldb_key = 76 and sa._mgitype_key = 33)");
 			
 			while(set.next()) {
 				PopulationSNP p = new PopulationSNP();
