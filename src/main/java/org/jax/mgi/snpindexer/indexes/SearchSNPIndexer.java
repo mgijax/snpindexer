@@ -19,8 +19,6 @@ public class SearchSNPIndexer extends Indexer {
 	private HashMap<Integer, ArrayList<String>> functionClassesMap = new HashMap<Integer, ArrayList<String>>();
 	private HashMap<Integer, ArrayList<String>> markersMap = new HashMap<Integer, ArrayList<String>>();
 
-	private StringBuffer excludeFunctionClasses = new StringBuffer();
-	
 	public SearchSNPIndexer(IndexerConfig config) {
 		super(config);
 	}
@@ -39,13 +37,6 @@ public class SearchSNPIndexer extends Indexer {
 				
 				Integer key = set.getInt("_term_key");
 				String fc = set.getString("term");
-				
-				if(fc.equals("within coordinates of") || fc.equals("within distance of")) {
-					if(excludeFunctionClasses.length() > 0){
-						excludeFunctionClasses.append(',');
-				    }
-					excludeFunctionClasses.append(key);
-				}
 				
 				functionMap.put(key, fc);
 			}
@@ -102,7 +93,7 @@ public class SearchSNPIndexer extends Indexer {
 						+ "from "
 						+ "snp.snp_accession sa, snp.snp_coord_cache scc "
 						+ "left join snp.snp_consensussnp_marker scm on "
-						+ "scc._consensussnp_key = scm._consensussnp_key and scm._fxn_key not in (" + excludeFunctionClasses + ") "
+						+ "scc._consensussnp_key = scm._consensussnp_key "
 						+ "where "
 						+ "sa._object_key = scc._consensussnp_key and sa._logicaldb_key = 73 and sa._mgitype_key = 30 and "
 						+ "scc.ismulticoord = 0 and "
@@ -159,7 +150,7 @@ public class SearchSNPIndexer extends Indexer {
 	private void setupMarkersMap(int start, int end) throws SQLException {
 		markersMap.clear();
 		
-		ResultSet set = sql.executeQuery("select scm._consensussnp_key, scm._marker_key from snp.snp_consensussnp_marker scm where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " and scm._fxn_key not in (" + excludeFunctionClasses + ") group by scm._consensussnp_key, scm._marker_key");
+		ResultSet set = sql.executeQuery("select scm._consensussnp_key, scm._marker_key from snp.snp_consensussnp_marker scm where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " group by scm._consensussnp_key, scm._marker_key");
 		
 		while(set.next()) {
 			ArrayList<String> list = markersMap.get(set.getInt("_consensussnp_key"));
@@ -175,7 +166,7 @@ public class SearchSNPIndexer extends Indexer {
 	private void setupFunctionClassMap(int start, int end) throws SQLException {
 		functionClassesMap.clear();
 		
-		ResultSet set = sql.executeQuery("select scm._consensussnp_key, scm._fxn_key from snp.snp_consensussnp_marker scm where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " and scm._fxn_key not in (" + excludeFunctionClasses + ") group by scm._consensussnp_key, scm._fxn_key");
+		ResultSet set = sql.executeQuery("select scm._consensussnp_key, scm._fxn_key from snp.snp_consensussnp_marker scm where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " group by scm._consensussnp_key, scm._fxn_key");
 		
 		while(set.next()) {
 			ArrayList<String> list = functionClassesMap.get(set.getInt("_consensussnp_key"));
