@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.jax.mgi.snpindexer.indexes.Indexer;
 import org.jax.mgi.snpindexer.indexes.IndexerConfig;
 import org.jax.mgi.snpindexer.util.ConfigurationHelper;
+import org.jax.mgi.snpindexer.util.EsClientFactory;
 
 public class Main {
 	
@@ -23,7 +24,7 @@ public class Main {
 		for(IndexerConfig ic: IndexerConfig.values()) {
 			try {
 				Indexer i = (Indexer)ic.getClazz().getDeclaredConstructor(IndexerConfig.class).newInstance(ic);
-				indexers.put(ic.getCoreName(), i);
+				indexers.put(ic.getIndexerName(), i);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -36,10 +37,10 @@ public class Main {
 			} else {
 				if(args.length > 0 && args[0].equals(name)) {
 					log.info("Starting one indexer: " + name);
-					indexers.get(name).index();
+					indexers.get(name).runIndex();
 				} else if(args.length == 0) {
 					log.info("Starting indexer sequentially: " + name);
-					indexers.get(name).index();
+					indexers.get(name).runIndex();
 				} else {
 					log.info("Not Starting: " + name);
 					for(int i = 0; i < args.length; i++) {
@@ -61,7 +62,9 @@ public class Main {
 			}
 		}
 		
-		log.info("End Time: " + new Date());
+		EsClientFactory.closeClients();
+		
+		log.info("Indexer Finished End Time: " + new Date());
 		System.exit(0);
 	}
 

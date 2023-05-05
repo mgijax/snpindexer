@@ -75,7 +75,7 @@
 	</target>
 
 	<target name="run">
-		<!-- $JAVA_HOME/bin/java -DPG_DBURL=jdbc:postgresql://mgi-testdb3.jax.org/export -DPG_DBUSER=mgd_dbo -DPG_DBPASS=db0dev -DSOLR_BASEURL=http://mgi-testapp3.jax.org:8983/solr -jar snpindexer.jar ConsensusSNPIndex -->
+		<!-- $JAVA_HOME/bin/java -DPG_DBURL=jdbc:postgresql://mgi-testdb3.jax.org/export -DPG_DBUSER=user -DPG_DBPASS=pass -DSOLR_BASEURL=http://mgi-testapp3.jax.org:8983/solr -jar snpindexer.jar ConsensusSNPIndex -->
 	</target>
 
 </project>

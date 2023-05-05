@@ -1,20 +1,13 @@
 package org.jax.mgi.snpindexer;
 
-import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.HashMap;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.jax.mgi.snpdatamodel.ConsensusSNP;
-import org.jax.mgi.snpdatamodel.visitors.PrintVisitor;
 import org.jax.mgi.snpindexer.indexes.ConsensusSNPIndexer;
 import org.jax.mgi.snpindexer.indexes.IndexerConfig;
 import org.jax.mgi.snpindexer.util.ConfigurationHelper;
-import org.jax.mgi.snpindexer.util.SQLExecutor;
 
 
 
@@ -29,10 +22,7 @@ public class MainTest {
 
 		for(ConsensusSNP c: consensusList.values()) {
 			if(c.getConsensusKey() == 3) {
-				PrintVisitor pi = new PrintVisitor();
-				c.Accept(pi);
-				pi.generateOutput(System.out);
-				
+
 				ObjectMapper mapper = new ObjectMapper();
 				mapper.setSerializationInclusion(Inclusion.NON_NULL);
 				String json = mapper.writeValueAsString(c);

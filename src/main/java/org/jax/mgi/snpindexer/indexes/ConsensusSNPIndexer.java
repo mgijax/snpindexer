@@ -1,16 +1,11 @@
 package org.jax.mgi.snpindexer.indexes;
 
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
-import org.apache.solr.client.solrj.SolrRequest;
-import org.apache.solr.common.SolrInputDocument;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.jax.mgi.snpdatamodel.AlleleSNP;
@@ -20,6 +15,7 @@ import org.jax.mgi.snpdatamodel.ConsensusMarkerSNP;
 import org.jax.mgi.snpdatamodel.ConsensusSNP;
 import org.jax.mgi.snpdatamodel.PopulationSNP;
 import org.jax.mgi.snpdatamodel.SubSNP;
+import org.jax.mgi.snpdatamodel.document.ConsensusSNPDocument;
 
 public class ConsensusSNPIndexer extends Indexer {
 
@@ -41,8 +37,7 @@ public class ConsensusSNPIndexer extends Indexer {
 
 	@Override
 	public void index() {
-		resetIndex();
-	
+
 		try {
 			
 			//Test Cases rs3163500,rs3657285,rs36238069,rs49786457,rs27287906,rs4228732,rs29392909,rs26922505,rs27287906
@@ -57,39 +52,22 @@ public class ConsensusSNPIndexer extends Indexer {
 
 			int chunkSize = config.getChunkSize();
 			int chunks = end / chunkSize;
-			
-			startProcess(chunks, chunkSize, end);
-			
+
 			for(int i = 0; i <= chunks; i++) {
 				int start = i * chunkSize;
 
 				HashMap<Integer, ConsensusSNP> consensusList = getConsensusSNP(start, (start + chunkSize));
-				
-				ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
-				for(ConsensusSNP snp: consensusList.values()) {
-//					PrintVisitor pi = new PrintVisitor();
-//					c.Accept(pi);
-//					pi.generateOutput(System.out);
 
-					SolrInputDocument doc = new SolrInputDocument();
-					doc.addField("consensussnp_accid", snp.getAccid());
-					try {
-						String json = mapper.writeValueAsString(snp);
-						doc.addField("objectJSONData", json);
-					} catch (JsonGenerationException e) {
-						e.printStackTrace();
-					} catch (JsonMappingException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
+				ArrayList<ConsensusSNPDocument> docCache = new ArrayList<>();
+				
+				for(ConsensusSNP snp: consensusList.values()) {
+					ConsensusSNPDocument doc = new ConsensusSNPDocument();
+					doc.setConsensussnp_accid(snp.getAccid());
+					doc.setObjectJSONData(snp);
 					docCache.add(doc);
 				}
-				addDocuments(docCache);
-				progress(i, chunks, chunkSize);
+				indexDocuments(docCache);
 			}
-			
-			finishProcess(end);
 			
 			sql.cleanup();
 
@@ -97,8 +75,7 @@ public class ConsensusSNPIndexer extends Indexer {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		
-		finish();
+
 	}
 
 	public HashMap<Integer, ConsensusSNP> getConsensusSNP(int start, int end) throws SQLException {

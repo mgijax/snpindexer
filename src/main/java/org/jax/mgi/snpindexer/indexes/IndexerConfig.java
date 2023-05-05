@@ -4,28 +4,38 @@ public enum IndexerConfig {
 	
 	// (SolrCoreName, IndexerClass, ChunkSize, CommitTimeout, DB Fetch Size)
 	
-	ConsensusSNPIndexer("ConsensusSNPIndex", ConsensusSNPIndexer.class, 20000, 90000, 50000),
-	SearchSNPIndexer("SearchSNPIndex", SearchSNPIndexer.class, 50000, 90000, 25000),
-	AlleleSNPIndexer("AlleleSNPIndex", AlleleSNPIndexer.class, 50000, 75000, 25000)
+	ConsensusSNPIndexer("ConsensusSNPIndex", "consensus_snp_index", ConsensusSNPIndexer.class, 20000, 100000, 10, 2),
+	SearchSNPIndexer("SearchSNPIndex", "search_snp_index", SearchSNPIndexer.class, 500, 100000, 10, 2),
+	AlleleSNPIndexer("AlleleSNPIndex", "allele_snp_index", AlleleSNPIndexer.class, 1000, 100000, 10, 2)
 	;
+	
+	// Name of the indexer for program args
+	private String indexerName;
+	// Name of index in ES
+	private String indexName;
 	
 	// Batch size to process from the database
 	private int chunkSize;
 	// Java Class of the indexer
 	private Class<?> clazz;
 	// Name of Solr Core
-	private String coreName;
-	// Frequency at which to commit documents to solr
-	private int	commitFreq;
-	// Fetch size for sql records per cursor
-	private int sqlFetchSize;
+	
+	// Number of documents to index in one batch
+	private int bulkActions;
+	// Max size in MB for the batch target = 10mb
+	private int bulkSize;
+	// Number of concurrent batch requests to the server at once
+	private int concurrentRequests; // Too many will cause the server to 429
 
-	IndexerConfig(String coreName, Class<?> clazz, int chunkSize, int commitFreq, int sqlFetchSize) {
-		this.coreName = coreName;
+	IndexerConfig(String indexerName, String indexName, Class<?> clazz, int chunkSize, int bulkActions, int bulkSize, int concurrentRequests) {
+		this.indexerName = indexerName;
+		this.indexName = indexName;
 		this.clazz = clazz;
 		this.chunkSize = chunkSize;
-		this.commitFreq = commitFreq;
-		this.sqlFetchSize = sqlFetchSize;
+
+		this.bulkActions = bulkActions;
+		this.bulkSize = bulkSize;
+		this.concurrentRequests = concurrentRequests;
 	}
 	
 	public int getChunkSize() {
@@ -34,14 +44,20 @@ public enum IndexerConfig {
 	public Class<?> getClazz() {
 		return clazz;
 	}
-	public String getCoreName() {
-		return coreName;
+	public String getIndexerName() {
+		return indexerName;
 	}
-	public long getCommitFreq() {
-		return commitFreq;
+	public String getIndexName() {
+		return indexName;
 	}
-	public int getSqlFetchSize() {
-		return sqlFetchSize;
+	public int getBulkActions() {
+		return bulkActions;
+	}
+	public int getBulkSize() {
+		return bulkSize;
+	}
+	public int getConcurrentRequests() {
+		return concurrentRequests;
 	}
 	
 }

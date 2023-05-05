@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.apache.solr.common.SolrInputDocument;
+import org.jax.mgi.snpdatamodel.document.AlleleSNPDocument;
 
 public class AlleleSNPIndexer extends Indexer {
 
@@ -28,8 +28,6 @@ public class AlleleSNPIndexer extends Indexer {
 
 	@Override
 	public void index() {
-		// Delete and Recreate the index
-		resetIndex();
 
 		try {
 
@@ -80,9 +78,7 @@ public class AlleleSNPIndexer extends Indexer {
 			int chunkSize = config.getChunkSize();
 			
 			int chunks = max / chunkSize;
-			
-			startProcess(chunks, chunkSize, max);
-			
+
 			for(int i = 0; i <= chunks; i++) {
 				int start = i * chunkSize;
 				int end = (start + chunkSize);
@@ -106,20 +102,17 @@ public class AlleleSNPIndexer extends Indexer {
 						+ "order by sa._object_key "
 				);
 
-				ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
+				ArrayList<AlleleSNPDocument> docCache = new ArrayList<AlleleSNPDocument>();
 
-				
-				
 				while (set.next()) {
 
 					if(allelesStrainsMap.get(set.getInt("_object_key")) != null && allelesStrainsMap.get(set.getInt("_object_key")).keySet().size() > 0) {
 						for(String allele: allelesStrainsMap.get(set.getInt("_object_key")).keySet()) {
-							SolrInputDocument doc = createDocument(set);
+							AlleleSNPDocument doc = createDocument(set);
 							
-							doc.addField("allele", allele);
+							doc.setAllele(allele);
 							
-							// Strains that have this allele
-							doc.addField("samestrains", allelesStrainsMap.get(set.getInt("_object_key")).get(allele));
+							doc.setSamestrains(allelesStrainsMap.get(set.getInt("_object_key")).get(allele));
 							
 							// Compute the strains that have a different allele
 							HashMap<String, ArrayList<String>> alleles = allelesStrainsMap.get(set.getInt("_object_key"));
@@ -132,25 +125,22 @@ public class AlleleSNPIndexer extends Indexer {
 								}
 							}
 							
-							doc.addField("diffstrains", diffStrains);
-							
-							
+							doc.setDiffstrains(diffStrains);
+
 							docCache.add(doc);
 						}
 					} else {
-						SolrInputDocument doc = createDocument(set);
+						AlleleSNPDocument doc = createDocument(set);
 						docCache.add(doc);
 					}
 
 				}
 				set.close();
 				
-				addDocuments(docCache);
-				progress(i, chunks, chunkSize);
+				indexDocuments(docCache);
+
 			}
-			
-			finishProcess(max);
-			
+
 			sql.cleanup();
 
 			log.info("Finished SNPSearchIndexer query");
@@ -158,27 +148,26 @@ public class AlleleSNPIndexer extends Indexer {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
-		finish();
+
 	}
 	
-	private SolrInputDocument createDocument(ResultSet set) throws SQLException {
-		SolrInputDocument doc = new SolrInputDocument();
+	private AlleleSNPDocument createDocument(ResultSet set) throws SQLException {
+
+		AlleleSNPDocument doc = new AlleleSNPDocument();
 		
-		doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
-		
-		doc.addField("chromosome", set.getString("chromosome"));
-		doc.addField("startcoordinate", set.getDouble("startcoordinate"));
-		doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
+		doc.setConsensussnp_accid(set.getString("consensussnp_accid"));
+		doc.setChromosome(set.getString("chromosome"));
+		doc.setStartcoordinate(set.getDouble("startcoordinate"));
+		doc.setVarclass(variationMap.get(set.getInt("_varclass_key")));
 		
 		if(functionClassesMap.containsKey(set.getInt("_object_key"))) {
-			doc.addField("fxn", functionClassesMap.get(set.getInt("_object_key")));
+			doc.setFxn(functionClassesMap.get(set.getInt("_object_key")));
 		}
 		if(markersMap.containsKey(set.getInt("_object_key"))) {
-			doc.addField("marker_accid", markersMap.get(set.getInt("_object_key")));
+			doc.setMarker_accid(markersMap.get(set.getInt("_object_key")));
 		}
 		
-		doc.addField("strains", strainsMap.get(set.getInt("_object_key")));
+		doc.setStrains(strainsMap.get(set.getInt("_object_key")));
 		
 		return doc;
 	}

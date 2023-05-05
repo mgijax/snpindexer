@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.apache.solr.common.SolrInputDocument;
+import org.jax.mgi.snpdatamodel.document.SearchSNPDocument;
 
 public class SearchSNPIndexer extends Indexer {
 
@@ -25,8 +25,6 @@ public class SearchSNPIndexer extends Indexer {
 
 	@Override
 	public void index() {
-		// Delete and Recreate the index
-		resetIndex();
 
 		try {
 
@@ -77,9 +75,7 @@ public class SearchSNPIndexer extends Indexer {
 			int chunkSize = config.getChunkSize();
 			
 			int chunks = max / chunkSize;
-			
-			startProcess(chunks, chunkSize, max);
-			
+
 			for(int i = 0; i <= chunks; i++) {
 				int start = i * chunkSize;
 				int end = (start + chunkSize);
@@ -102,39 +98,33 @@ public class SearchSNPIndexer extends Indexer {
 						+ "order by sa._object_key "
 				);
 
-				ArrayList<SolrInputDocument> docCache = new ArrayList<SolrInputDocument>();
-
-				
+				ArrayList<SearchSNPDocument> docCache = new ArrayList<SearchSNPDocument>();
 				
 				while (set.next()) {
 
-					SolrInputDocument doc = new SolrInputDocument();
+					SearchSNPDocument doc = new SearchSNPDocument();
 					
-					doc.addField("consensussnp_accid", set.getString("consensussnp_accid"));
-					
-					doc.addField("chromosome", set.getString("chromosome"));
-					doc.addField("startcoordinate", set.getDouble("startcoordinate"));
-					doc.addField("varclass", variationMap.get(set.getInt("_varclass_key")));
-					
+					doc.setConsensussnp_accid(set.getString("consensussnp_accid"));
+					doc.setChromosome(set.getString("chromosome"));
+					doc.setStartcoordinate(set.getDouble("startcoordinate"));
+					doc.setVarclass(variationMap.get(set.getInt("_varclass_key")));
+
 					if(functionClassesMap.containsKey(set.getInt("_object_key"))) {
-						doc.addField("fxn", functionClassesMap.get(set.getInt("_object_key")));
+						doc.setFxn(functionClassesMap.get(set.getInt("_object_key")));
 					}
 					if(markersMap.containsKey(set.getInt("_object_key"))) {
-						doc.addField("marker_accid", markersMap.get(set.getInt("_object_key")));
+						doc.setMarker_accid(markersMap.get(set.getInt("_object_key")));
 					}
-					
-					doc.addField("strains", strainsMap.get(set.getInt("_object_key")));
+					doc.setStrains(strainsMap.get(set.getInt("_object_key")));
 					
 					docCache.add(doc);
 
 				}
 				set.close();
 				
-				addDocuments(docCache);
-				progress(i, chunks, chunkSize);
+				indexDocuments(docCache);
+
 			}
-			
-			finishProcess(max);
 			
 			sql.cleanup();
 
@@ -143,8 +133,6 @@ public class SearchSNPIndexer extends Indexer {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
-		finish();
 	}
 	
 	private void setupMarkersMap(int start, int end) throws SQLException {

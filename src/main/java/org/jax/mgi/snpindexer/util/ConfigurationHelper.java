@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -16,7 +17,7 @@ public class ConfigurationHelper {
 	private static String databaseUrl = null;
 	private static String user = null;
 	private static String password = null;
-	private static List<String> solrBaseUrls = null;
+	private static List<String> esUrls = null;
 	private static String logFilePath = null;
 	private static String logFileName = null;
 	private static boolean debug = false;
@@ -30,6 +31,7 @@ public class ConfigurationHelper {
 		if(in == null) {
 			System.out.println("No log4j.properties file. Output going to stdout this is most likely not what you want");
 			BasicConfigurator.configure();
+			Logger.getRootLogger().setLevel(Level.INFO);
 		} else {
 			try {
 				props.load(in);
@@ -56,8 +58,8 @@ public class ConfigurationHelper {
 		password = System.getProperty("PG_DBPASS");
 		if(password != null) { log.info("Found: -D PG_DBPASS=" + password); }
 		
-		solrBaseUrls = parseCommaSeperatedProperty(System.getProperty("SOLR_BASEURL"));
-		if(solrBaseUrls != null) { log.info("Found: -D SOLR_BASEURL=" + solrBaseUrls); }
+		esUrls = parseCommaSeperatedProperty(System.getProperty("ES_URL"));
+		if(esUrls != null) { log.info("Found: -D ES_URL=" + esUrls); }
 		
 		logFilePath = System.getProperty("LOG_DIR");
 		if(logFilePath != null) { log.info("Found: -D LOG_DIR=" + logFilePath); }
@@ -94,9 +96,9 @@ public class ConfigurationHelper {
 					if(password != null) { log.info("Config File: password=" + password); }
 				}
 				
-				if(solrBaseUrls == null) {
-					solrBaseUrls = parseCommaSeperatedProperty(configurationProperties.getProperty("solrBaseUrl"));
-					if(solrBaseUrls != null) { log.info("Config File: solrBaseUrl=" + solrBaseUrls); }
+				if(esUrls == null) {
+					esUrls = parseCommaSeperatedProperty(configurationProperties.getProperty("esUrls"));
+					if(esUrls != null) { log.info("Config File: esUrl=" + esUrls); }
 				}
 				if(logFilePath == null) {
 					logFilePath = configurationProperties.getProperty("logFilePath");
@@ -136,9 +138,9 @@ public class ConfigurationHelper {
 			if(password != null) { log.info("Found Enviroment ENV[PG_DBPASS]=" + password); }
 		}
 		
-		if(solrBaseUrls == null) {
-			solrBaseUrls = parseCommaSeperatedProperty(System.getenv("SOLR_BASEURL"));
-			if(solrBaseUrls != null) { log.info("Found Enviroment ENV[SOLR_BASEURL]=" + solrBaseUrls); }
+		if(esUrls == null) {
+			esUrls = parseCommaSeperatedProperty(System.getenv("ES_URL"));
+			if(esUrls != null) { log.info("Found Enviroment ENV[ES_URL]=" + esUrls); }
 		}
 		if(logFilePath == null) {
 			logFilePath = System.getenv("LOG_DIR");
@@ -172,10 +174,10 @@ public class ConfigurationHelper {
 			log.info("Setting default: password=" + password);
 		}
 
-		if(solrBaseUrls == null) {
-			solrBaseUrls = new ArrayList<String>();
-			solrBaseUrls.add("http://localhost.jax.org:8983/solr");
-			log.info("Setting default: solrBaseUrl=" + solrBaseUrls);
+		if(esUrls == null) {
+			esUrls = new ArrayList<String>();
+			esUrls.add("localhost.jax.org");
+			log.info("Setting default: esUrl=" + esUrls);
 		}
 		
 		if(logFileName == null || logFileName.length() == 0) {
@@ -220,7 +222,7 @@ public class ConfigurationHelper {
 		log.info("\tdatabaseUrl: " + databaseUrl);
 		log.info("\tuser: " + user);
 		log.info("\tpassword: " + password);
-		log.info("\tsolrBaseUrls: " + solrBaseUrls);
+		log.info("\tesUrls: " + esUrls);
 		log.info("\tlogFilePath: " + logFilePath);
 		log.info("\tdebug: " + debug);
 		log.info("\tthreaded: " + threaded);
@@ -238,8 +240,8 @@ public class ConfigurationHelper {
 	public static String getPassword() {
 		return password;
 	}
-	public static List<String> getSolrBaseUrls() {
-		return solrBaseUrls;
+	public static List<String> getEsUrls() {
+		return esUrls;
 	}
 	public static String getLogFilePath() {
 		return logFilePath;
