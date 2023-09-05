@@ -2,12 +2,13 @@ package org.jax.mgi.snpindexer;
 
 import java.util.HashMap;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.jax.mgi.snpdatamodel.ConsensusSNP;
 import org.jax.mgi.snpindexer.indexes.ConsensusSNPIndexer;
 import org.jax.mgi.snpindexer.indexes.IndexerConfig;
 import org.jax.mgi.snpindexer.util.ConfigurationHelper;
+
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 
@@ -24,7 +25,7 @@ public class MainTest {
 			if(c.getConsensusKey() == 3) {
 
 				ObjectMapper mapper = new ObjectMapper();
-				mapper.setSerializationInclusion(Inclusion.NON_NULL);
+				mapper.setSerializationInclusion(Include.NON_NULL);
 				String json = mapper.writeValueAsString(c);
 				System.out.println("Json: " + json);
 			}

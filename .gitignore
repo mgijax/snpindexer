@@ -11,3 +11,5 @@ snpindexer.log
 lib/snpdatamodel.jar
 lib/*.checksum
 Configuration
+.classpath
+.project

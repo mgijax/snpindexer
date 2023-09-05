@@ -73,6 +73,7 @@ public class AlleleSNPIndexer extends Indexer {
 
 			set.next();
 			int max = set.getInt("maxKey");
+			display.startProcess(config.getIndexerName(), max);
 			set.close();
 
 			int chunkSize = config.getChunkSize();

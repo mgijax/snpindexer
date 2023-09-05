@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 import org.jax.mgi.snpindexer.indexes.Indexer;
 import org.jax.mgi.snpindexer.indexes.IndexerConfig;
 import org.jax.mgi.snpindexer.util.ConfigurationHelper;
-import org.jax.mgi.snpindexer.util.EsClientFactory;
 
 public class Main {
 	
@@ -61,8 +60,6 @@ public class Main {
 				e.printStackTrace();
 			}
 		}
-		
-		EsClientFactory.closeClients();
 		
 		log.info("Indexer Finished End Time: " + new Date());
 		System.exit(0);

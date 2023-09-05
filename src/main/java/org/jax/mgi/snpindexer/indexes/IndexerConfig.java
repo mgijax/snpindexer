@@ -5,8 +5,8 @@ public enum IndexerConfig {
 	// (SolrCoreName, IndexerClass, ChunkSize, CommitTimeout, DB Fetch Size)
 	
 	ConsensusSNPIndexer("ConsensusSNPIndex", "consensus_snp_index", ConsensusSNPIndexer.class, 20000, 100000, 10, 2),
-	SearchSNPIndexer("SearchSNPIndex", "search_snp_index", SearchSNPIndexer.class, 500, 100000, 10, 2),
-	AlleleSNPIndexer("AlleleSNPIndex", "allele_snp_index", AlleleSNPIndexer.class, 1000, 100000, 10, 2)
+	SearchSNPIndexer(   "SearchSNPIndex",    "search_snp_index",    SearchSNPIndexer.class,      500, 100000, 10, 2),
+	AlleleSNPIndexer(   "AlleleSNPIndex",    "allele_snp_index",    AlleleSNPIndexer.class,     1000, 100000, 10, 2)
 	;
 	
 	// Name of the indexer for program args
@@ -23,11 +23,11 @@ public enum IndexerConfig {
 	// Number of documents to index in one batch
 	private int bulkActions;
 	// Max size in MB for the batch target = 10mb
-	private int bulkSize;
+	private long bulkSize;
 	// Number of concurrent batch requests to the server at once
 	private int concurrentRequests; // Too many will cause the server to 429
 
-	IndexerConfig(String indexerName, String indexName, Class<?> clazz, int chunkSize, int bulkActions, int bulkSize, int concurrentRequests) {
+	IndexerConfig(String indexerName, String indexName, Class<?> clazz, int chunkSize, int bulkActions, long bulkSize, int concurrentRequests) {
 		this.indexerName = indexerName;
 		this.indexName = indexName;
 		this.clazz = clazz;
@@ -53,8 +53,8 @@ public enum IndexerConfig {
 	public int getBulkActions() {
 		return bulkActions;
 	}
-	public int getBulkSize() {
-		return bulkSize;
+	public long getBulkSize() {
+		return bulkSize * 1024 * 1024;
 	}
 	public int getConcurrentRequests() {
 		return concurrentRequests;

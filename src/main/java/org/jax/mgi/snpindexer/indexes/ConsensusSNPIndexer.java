@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.jax.mgi.snpdatamodel.AlleleSNP;
 import org.jax.mgi.snpdatamodel.ConsensusAlleleSNP;
 import org.jax.mgi.snpdatamodel.ConsensusCoordinateSNP;
@@ -16,6 +14,9 @@ import org.jax.mgi.snpdatamodel.ConsensusSNP;
 import org.jax.mgi.snpdatamodel.PopulationSNP;
 import org.jax.mgi.snpdatamodel.SubSNP;
 import org.jax.mgi.snpdatamodel.document.ConsensusSNPDocument;
+
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ConsensusSNPIndexer extends Indexer {
 
@@ -32,7 +33,7 @@ public class ConsensusSNPIndexer extends Indexer {
 	
 	public ConsensusSNPIndexer(IndexerConfig config) {
 		super(config);
-		mapper.setSerializationInclusion(Inclusion.NON_NULL);
+		mapper.setSerializationInclusion(Include.NON_NULL);
 	}
 
 	@Override
@@ -49,6 +50,8 @@ public class ConsensusSNPIndexer extends Indexer {
 			setupMarkers();
 			
 			int end = getMaxConsensus();
+			
+			display.startProcess(config.getIndexerName(), end);
 
 			int chunkSize = config.getChunkSize();
 			int chunks = end / chunkSize;
@@ -67,6 +70,7 @@ public class ConsensusSNPIndexer extends Indexer {
 					docCache.add(doc);
 				}
 				indexDocuments(docCache);
+				docCache.clear();
 			}
 			
 			sql.cleanup();
@@ -162,7 +166,7 @@ public class ConsensusSNPIndexer extends Indexer {
 			snp.setOrientation(set.getString("orientation"));
 			snp.setSubmitterId(set.getString("submitter"));
 			snp.setVariationClass(variationClasses.get(set.getInt("_varclass_key")));
-			LinkedHashMap<Integer, PopulationSNP> pops = new LinkedHashMap<Integer, PopulationSNP>();
+			//LinkedHashMap<Integer, PopulationSNP> pops = new LinkedHashMap<Integer, PopulationSNP>();
 			PopulationSNP p = populationsBySubHandleKey.get(set.getInt("_subhandle_key")).dup();
 			snp.populations.put(p.getPopulationKey(), p);
 			snps.put(set.getInt("_subsnp_key"), snp);
