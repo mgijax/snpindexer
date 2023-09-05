@@ -1,1 +1,1 @@
-java -DTHREADED=true -jar ../dist/snpindexer.jar
+java -DTHREADED=true -jar ../target/snpindexer.jar
