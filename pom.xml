@@ -109,9 +109,12 @@
 			<artifactId>commons-math3</artifactId>
 			<version>3.6.1</version>
 		</dependency>
+		
+		
+		
 		<dependency>
 			<groupId>org.jax.mgi.snpdatamodel</groupId>
-			<artifactId>SNP-DataModel</artifactId>
+			<artifactId>snpdatamodel</artifactId>
 			<version>0.0.1</version>
 		</dependency>
 	</dependencies>
