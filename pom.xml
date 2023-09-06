@@ -4,11 +4,17 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	<parent>
+		<groupId>org.jax</groupId>
+		<artifactId>mgi</artifactId>
+		<version>${revision}</version>
+		<relativePath>../mgi_java/pom.xml</relativePath>
+	</parent>
+
 	<artifactId>snpindexer</artifactId>
 	<groupId>org.jax.mgi</groupId>
 	<packaging>jar</packaging>
 	<version>0.0.1</version>
-
 	<name>SNP Indexer</name>
 
 	<properties>
@@ -110,12 +116,9 @@
 			<version>3.6.1</version>
 		</dependency>
 		
-		
-		
 		<dependency>
-			<groupId>org.jax.mgi.snpdatamodel</groupId>
+			<groupId>org.jax.mgi</groupId>
 			<artifactId>snpdatamodel</artifactId>
-			<version>0.0.1</version>
 		</dependency>
 	</dependencies>
 
