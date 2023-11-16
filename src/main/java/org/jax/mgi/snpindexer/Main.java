@@ -4,9 +4,9 @@ import java.util.Date;
 import java.util.HashMap;
 
 import org.apache.log4j.Logger;
+import org.jax.mgi.snpindexer.config.ConfigurationHelper;
+import org.jax.mgi.snpindexer.config.IndexerConfig;
 import org.jax.mgi.snpindexer.indexes.Indexer;
-import org.jax.mgi.snpindexer.indexes.IndexerConfig;
-import org.jax.mgi.snpindexer.util.ConfigurationHelper;
 
 public class Main {
 	

@@ -1,14 +1,8 @@
 package org.jax.mgi.snpindexer;
 
-import java.util.HashMap;
-
-import org.jax.mgi.snpdatamodel.ConsensusSNP;
+import org.jax.mgi.snpindexer.config.ConfigurationHelper;
+import org.jax.mgi.snpindexer.config.IndexerConfig;
 import org.jax.mgi.snpindexer.indexes.ConsensusSNPIndexer;
-import org.jax.mgi.snpindexer.indexes.IndexerConfig;
-import org.jax.mgi.snpindexer.util.ConfigurationHelper;
-
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 
@@ -19,17 +13,17 @@ public class MainTest {
 		
 		ConsensusSNPIndexer i = new ConsensusSNPIndexer(IndexerConfig.ConsensusSNPIndexer);
 		
-		HashMap<Integer, ConsensusSNP> consensusList = i.getConsensusSNP(2, 4);
-
-		for(ConsensusSNP c: consensusList.values()) {
-			if(c.getConsensusKey() == 3) {
-
-				ObjectMapper mapper = new ObjectMapper();
-				mapper.setSerializationInclusion(Include.NON_NULL);
-				String json = mapper.writeValueAsString(c);
-				System.out.println("Json: " + json);
-			}
-		}
+//		HashMap<Integer, ConsensusSNP> consensusList = i.getConsensusSNP(2, 4);
+//
+//		for(ConsensusSNP c: consensusList.values()) {
+//			if(c.getConsensusKey() == 3) {
+//
+//				ObjectMapper mapper = new ObjectMapper();
+//				mapper.setSerializationInclusion(Include.NON_NULL);
+//				String json = mapper.writeValueAsString(c);
+//				System.out.println("Json: " + json);
+//			}
+//		}
 		
 //		SQLExecutor sql = new SQLExecutor(50000, false);
 //		HashMap<Integer, String> hash = null;

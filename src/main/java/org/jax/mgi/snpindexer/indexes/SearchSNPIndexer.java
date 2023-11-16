@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.jax.mgi.snpdatamodel.document.SearchSNPDocument;
+import org.jax.mgi.snpindexer.config.IndexerConfig;
 
 public class SearchSNPIndexer extends Indexer {
 

@@ -1,4 +1,4 @@
-package org.jax.mgi.snpindexer.util;
+package org.jax.mgi.snpindexer.config;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,13 +11,16 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class ConfigurationHelper {
 	
 	private static String driver = null;
 	private static String databaseUrl = null;
 	private static String user = null;
 	private static String password = null;
-	private static List<String> esUrls = null;
+	private static List<List<String>> esUrls = null;
 	private static String logFilePath = null;
 	private static String logFileName = null;
 	private static boolean debug = false;
@@ -58,7 +61,7 @@ public class ConfigurationHelper {
 		password = System.getProperty("PG_DBPASS");
 		if(password != null) { log.info("Found: -D PG_DBPASS=" + password); }
 		
-		esUrls = parseCommaSeperatedProperty(System.getProperty("ES_URL"));
+		esUrls = parseJSONArrayProperty(System.getProperty("ES_URLS"));
 		if(esUrls != null) { log.info("Found: -D ES_URL=" + esUrls); }
 		
 		logFilePath = System.getProperty("LOG_DIR");
@@ -72,7 +75,7 @@ public class ConfigurationHelper {
 		
 		log.info("Loading Properties via conf/config.properties file");
 
-		in = SQLExecutor.class.getClassLoader().getResourceAsStream("config.properties");
+		in = ConfigurationHelper.class.getClassLoader().getResourceAsStream("config.properties");
 		if(in != null) {
 			try {
 				Properties configurationProperties = new Properties();
@@ -97,7 +100,7 @@ public class ConfigurationHelper {
 				}
 				
 				if(esUrls == null) {
-					esUrls = parseCommaSeperatedProperty(configurationProperties.getProperty("esUrls"));
+					esUrls = parseJSONArrayProperty(configurationProperties.getProperty("esUrls"));
 					if(esUrls != null) { log.info("Config File: esUrl=" + esUrls); }
 				}
 				if(logFilePath == null) {
@@ -139,8 +142,8 @@ public class ConfigurationHelper {
 		}
 		
 		if(esUrls == null) {
-			esUrls = parseCommaSeperatedProperty(System.getenv("ES_URL"));
-			if(esUrls != null) { log.info("Found Enviroment ENV[ES_URL]=" + esUrls); }
+			esUrls = parseJSONArrayProperty(System.getenv("ES_URLS"));
+			if(esUrls != null) { log.info("Found Enviroment ENV[ES_URLS]=" + esUrls); }
 		}
 		if(logFilePath == null) {
 			logFilePath = System.getenv("LOG_DIR");
@@ -175,8 +178,10 @@ public class ConfigurationHelper {
 		}
 
 		if(esUrls == null) {
-			esUrls = new ArrayList<String>();
-			esUrls.add("localhost.jax.org");
+			esUrls = new ArrayList<List<String>>();
+			ArrayList<String> list = new ArrayList<>();
+			list.add("localhost.jax.org:9200");
+			esUrls.add(list);
 			log.info("Setting default: esUrl=" + esUrls);
 		}
 		
@@ -198,22 +203,18 @@ public class ConfigurationHelper {
 		PropertyConfigurator.configure(props);
 	}
 	
-	private static List<String> parseCommaSeperatedProperty(String property) {
+	private static List<List<String>> parseJSONArrayProperty(String property) {
 		if(property == null || property.length() == 0) { 
 			return null;
 		} else {
-			String[] urls = property.split(",");
-			if(urls.length > 0) {
-				ArrayList<String> urlList = new ArrayList<String>();
-				for(String url: urls) {
-					url = url.trim();
-					urlList.add(url);
-				}
-				return urlList;
-			} else {
-				return null;
+			try {
+				ObjectMapper mapper = new ObjectMapper();
+				return mapper.readValue(property, new TypeReference<List<List<String>>>() {});
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
+		return null;
 	}
 
 	public static void printProperties() {
@@ -240,7 +241,7 @@ public class ConfigurationHelper {
 	public static String getPassword() {
 		return password;
 	}
-	public static List<String> getEsUrls() {
+	public static List<List<String>> getEsUrls() {
 		return esUrls;
 	}
 	public static String getLogFilePath() {

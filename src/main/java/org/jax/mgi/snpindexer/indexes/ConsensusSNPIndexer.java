@@ -5,6 +5,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.jax.mgi.snpdatamodel.AlleleSNP;
 import org.jax.mgi.snpdatamodel.ConsensusAlleleSNP;
@@ -14,6 +17,8 @@ import org.jax.mgi.snpdatamodel.ConsensusSNP;
 import org.jax.mgi.snpdatamodel.PopulationSNP;
 import org.jax.mgi.snpdatamodel.SubSNP;
 import org.jax.mgi.snpdatamodel.document.ConsensusSNPDocument;
+import org.jax.mgi.snpindexer.config.IndexerConfig;
+import org.jax.mgi.snpindexer.util.SQLExecutor;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,6 +34,8 @@ public class ConsensusSNPIndexer extends Indexer {
 	private HashMap<Integer, String> variationClasses = null;
 	private HashMap<Integer, Marker> markers = null;
 	
+	private LinkedBlockingQueue<DBChunk> queue = new LinkedBlockingQueue<>();
+	
 	private ObjectMapper mapper = new ObjectMapper();
 	
 	public ConsensusSNPIndexer(IndexerConfig config) {
@@ -42,15 +49,18 @@ public class ConsensusSNPIndexer extends Indexer {
 		try {
 			
 			//Test Cases rs3163500,rs3657285,rs36238069,rs49786457,rs27287906,rs4228732,rs29392909,rs26922505,rs27287906
+			SQLExecutor exec = new SQLExecutor(config.getCursorSize(), false);
 			
-			setupStrains();
-			setupPopulations();
-			setupFunctionClasses();
-			setupVariationClasses();
-			setupMarkers();
+			setupStrains(exec);
+			setupPopulations(exec);
+			setupFunctionClasses(exec);
+			setupVariationClasses(exec);
+			setupMarkers(exec);
 			
-			int end = getMaxConsensus();
+			int end = getMaxConsensus(exec);
 			
+			exec.cleanup();
+
 			display.startProcess(config.getIndexerName(), end);
 
 			int chunkSize = config.getChunkSize();
@@ -58,22 +68,33 @@ public class ConsensusSNPIndexer extends Indexer {
 
 			for(int i = 0; i <= chunks; i++) {
 				int start = i * chunkSize;
-
-				HashMap<Integer, ConsensusSNP> consensusList = getConsensusSNP(start, (start + chunkSize));
-
-				ArrayList<ConsensusSNPDocument> docCache = new ArrayList<>();
 				
-				for(ConsensusSNP snp: consensusList.values()) {
-					ConsensusSNPDocument doc = new ConsensusSNPDocument();
-					doc.setConsensussnp_accid(snp.getAccid());
-					doc.setObjectJSONData(snp);
-					docCache.add(doc);
+				DBChunk chunk = new DBChunk(start, start + chunkSize);
+				
+				try {
+					queue.put(chunk);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				indexDocuments(docCache);
-				docCache.clear();
 			}
 			
-			sql.cleanup();
+			int workerCount = config.getWorkerCount();
+			
+			ExecutorService executor = Executors.newFixedThreadPool(workerCount);
+			
+			for(int i = 0; i < workerCount; i++) {
+				executor.execute(new QueueWorker());
+			}
+
+			executor.shutdown();
+			while (!executor.isTerminated()) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -81,12 +102,45 @@ public class ConsensusSNPIndexer extends Indexer {
 		}
 
 	}
+	
+	private class QueueWorker implements Runnable {
 
-	public HashMap<Integer, ConsensusSNP> getConsensusSNP(int start, int end) throws SQLException {
+		@Override
+		public void run() {
+			log.info("Running QueueWorker");
+			try {
+				SQLExecutor exec = new SQLExecutor(config.getCursorSize(), false);
+				while(!queue.isEmpty()) {
+					DBChunk chunk = queue.take();
+					HashMap<Integer, ConsensusSNP> consensusList = getConsensusSNP(exec, chunk.start, chunk.end);
+					
+					ArrayList<ConsensusSNPDocument> docCache = new ArrayList<>();
+					
+					for(ConsensusSNP snp: consensusList.values()) {
+						ConsensusSNPDocument doc = new ConsensusSNPDocument();
+						doc.setConsensussnp_accid(snp.getAccid());
+						doc.setObjectJSONData(snp);
+						docCache.add(doc);
+					}
+					indexDocuments(docCache);
+					docCache.clear();
+
+				}
+				exec.cleanup();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			log.info("QueueWorker Finished");
+		}
+	}
+	
+	public record DBChunk(int start, int end) { }
+
+	public HashMap<Integer, ConsensusSNP> getConsensusSNP(SQLExecutor exec, int start, int end) throws SQLException {
 	
 		HashMap<Integer, ConsensusSNP> ret = new HashMap<Integer, ConsensusSNP>();
 
-		ResultSet set = sql.executeQuery("select scs._consensussnp_key, sa.accid, scs._varclass_key, scs.allelesummary, scs.iupaccode, scs.buildcreated, scs.buildupdated "
+		ResultSet set = exec.executeQuery("select scs._consensussnp_key, sa.accid, scs._varclass_key, scs.allelesummary, scs.iupaccode, scs.buildcreated, scs.buildupdated "
 				+ "from snp.snp_accession sa, snp.snp_consensussnp scs where sa._logicaldb_key = 73 and sa._mgitype_key = 30 and "
 				+ "scs._consensussnp_key > " + start + " and scs._consensussnp_key <= " + end + " and scs._consensussnp_key = sa._object_key");
 
@@ -110,24 +164,24 @@ public class ConsensusSNPIndexer extends Indexer {
 
 		set.close();
 
-		populateFlanks(ret, start, end, true);
-		populateFlanks(ret, start, end, false);
-		populateSubSnps(ret, start, end);
-		populateConsensusAlleles(ret, start, end);
-		populateCoordinateCache(ret, start, end);
-		
+		populateFlanks(exec, ret, start, end, true);
+		populateFlanks(exec, ret, start, end, false);
+		populateSubSnps(exec, ret, start, end);
+		populateConsensusAlleles(exec, ret, start, end);
+		populateCoordinateCache(exec, ret, start, end);
+
 		return ret;
 	}
 
-	private void populateFlanks(HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end, boolean is5Prime) throws SQLException {
+	private void populateFlanks(SQLExecutor exec, HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end, boolean is5Prime) throws SQLException {
 		
 		LinkedHashMap<Integer, StringBuffer> flanks = new LinkedHashMap<Integer, StringBuffer>();
 		
 		ResultSet set;
 		if(is5Prime) {
-			set = sql.executeQuery("select * from snp.snp_flank where _consensussnp_key > " + start + " and _consensussnp_key <= " + end + " and is5prime = 1");
+			set = exec.executeQuery("select * from snp.snp_flank where _consensussnp_key > " + start + " and _consensussnp_key <= " + end + " and is5prime = 1");
 		} else {
-			set = sql.executeQuery("select * from snp.snp_flank where _consensussnp_key > " + start + " and _consensussnp_key <= " + end + " and is5prime = 0");
+			set = exec.executeQuery("select * from snp.snp_flank where _consensussnp_key > " + start + " and _consensussnp_key <= " + end + " and is5prime = 0");
 		}
 		
 		while(set.next()) {
@@ -148,8 +202,8 @@ public class ConsensusSNPIndexer extends Indexer {
 		}
 	}
 
-	private void populateSubSnps(HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
-		ResultSet set = sql.executeQuery("select sss._subsnp_key, sss._consensussnp_key, sss._subhandle_key, sa.accid, sss.allelesummary, sss.isexemplar, sss.orientation, sss._varclass_key, "
+	private void populateSubSnps(SQLExecutor exec, HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
+		ResultSet set = exec.executeQuery("select sss._subsnp_key, sss._consensussnp_key, sss._subhandle_key, sa.accid, sss.allelesummary, sss.isexemplar, sss.orientation, sss._varclass_key, "
 				+ "sa2.accid as submitter from snp.snp_subsnp sss, snp.snp_accession sa, snp.snp_accession sa2 where sss._subsnp_key = sa._object_key "
 				+ "and sss._consensussnp_key > " + start + " and sss._consensussnp_key <= " + end + " and sa._logicaldb_key = 74 and sa._mgitype_key = 31 and "
 						+ "sss._subsnp_key = sa2._object_key and sa2._logicaldb_key = 75 and sa2._mgitype_key = 31");
@@ -174,12 +228,12 @@ public class ConsensusSNPIndexer extends Indexer {
 			consensusSnps.get(set.getInt("_consensussnp_key")).getSubSNPs().add(snp);
 		}
 
-		populatePopulations(snps, start, end);
+		populatePopulations(exec, snps, start, end);
 		
 	}
 	
-	private void populateConsensusAlleles(HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
-		ResultSet set = sql.executeQuery("select ssca._consensussnp_key, ssca._mgdstrain_key, ssca.isconflict, ssca.allele from snp.snp_consensussnp_strainallele ssca where ssca._consensussnp_key > " + start + " and ssca._consensussnp_key <= " + end);
+	private void populateConsensusAlleles(SQLExecutor exec, HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
+		ResultSet set = exec.executeQuery("select ssca._consensussnp_key, ssca._mgdstrain_key, ssca.isconflict, ssca.allele from snp.snp_consensussnp_strainallele ssca where ssca._consensussnp_key > " + start + " and ssca._consensussnp_key <= " + end);
 		while(set.next()) {
 			ConsensusAlleleSNP ca = new ConsensusAlleleSNP();
 			ca.setAllele(set.getString("allele"));
@@ -190,10 +244,10 @@ public class ConsensusSNPIndexer extends Indexer {
 		set.close();
 	}
 	
-	private void populateCoordinateCache(HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
+	private void populateCoordinateCache(SQLExecutor exec, HashMap<Integer, ConsensusSNP> consensusSnps, int start, int end) throws SQLException {
 		HashMap<Integer, ConsensusCoordinateSNP> coords = new HashMap<Integer, ConsensusCoordinateSNP>();
 		
-		ResultSet set = sql.executeQuery("select scc._coord_cache_key, scc._consensussnp_key, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc.strand, scc._varclass_key, "
+		ResultSet set = exec.executeQuery("select scc._coord_cache_key, scc._consensussnp_key, scc.chromosome, scc.startcoordinate, scc.ismulticoord, scc.strand, scc._varclass_key, "
 				+ "scc.allelesummary, scc.iupaccode from snp.snp_coord_cache scc where scc._consensussnp_key > " + start + " and scc._consensussnp_key <= " + end);
 		
 		while(set.next()) {
@@ -212,11 +266,11 @@ public class ConsensusSNPIndexer extends Indexer {
 		}
 		set.close();
 		
-		populateConsensusMarkers(coords, start, end);
+		populateConsensusMarkers(exec, coords, start, end);
 	}
 	
-	private void populateConsensusMarkers(HashMap<Integer, ConsensusCoordinateSNP> coords, int start, int end) throws SQLException {
-		ResultSet set = sql.executeQuery("select scm._coord_cache_key, scm._marker_key, scm._consensussnp_key, scm._fxn_key, scm._consensussnp_marker_key, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame, scm.distance_from, scm.distance_direction, stp.transcriptid, stp.proteinid "
+	private void populateConsensusMarkers(SQLExecutor exec, HashMap<Integer, ConsensusCoordinateSNP> coords, int start, int end) throws SQLException {
+		ResultSet set = exec.executeQuery("select scm._coord_cache_key, scm._marker_key, scm._consensussnp_key, scm._fxn_key, scm._consensussnp_marker_key, scm.contig_allele, scm.residue, scm.aa_position, scm.reading_frame, scm.distance_from, scm.distance_direction, stp.transcriptid, stp.proteinid "
 				+ "from snp.snp_consensussnp_marker scm left join snp.snp_transcript_protein stp on scm._transcript_protein_key = stp._transcript_protein_key "
 				+ "where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end);
 
@@ -252,8 +306,8 @@ public class ConsensusSNPIndexer extends Indexer {
 	
 	}
 
-	private void populatePopulations(HashMap<Integer, SubSNP> snps, int start, int end) throws SQLException {
-		ResultSet set = sql.executeQuery(
+	private void populatePopulations(SQLExecutor exec, HashMap<Integer, SubSNP> snps, int start, int end) throws SQLException {
+		ResultSet set = exec.executeQuery(
 			"select ssa._subsnp_key, ssa._population_key, ssa._mgdstrain_key, ssa.allele "
 			+ "from snp.snp_subsnp sss, snp.snp_subsnp_strainallele ssa "
 			+ "where sss._consensussnp_key > " + start
@@ -278,11 +332,12 @@ public class ConsensusSNPIndexer extends Indexer {
 		set.close();
 	}
 	
-	private void setupStrains() throws SQLException {
+	private void setupStrains(SQLExecutor exec) throws SQLException {
 		if(strains == null) {
+			log.info("Setting Up Strains: ");
 			strains = new HashMap<Integer, String>();
 			
-			ResultSet set = sql.executeQuery("select * from snp.snp_strain");
+			ResultSet set = exec.executeQuery("select * from snp.snp_strain");
 			while(set.next()) {
 				strains.put(set.getInt("_mgdstrain_key"), set.getString("strain"));
 			}
@@ -290,11 +345,12 @@ public class ConsensusSNPIndexer extends Indexer {
 		}
 	}
 	
-	private void setupFunctionClasses() throws SQLException {
+	private void setupFunctionClasses(SQLExecutor exec) throws SQLException {
 		if(functionClasses == null) {
+			log.info("Setting Up Function Classes: ");
 			functionClasses = new HashMap<Integer, String>();
 			
-			ResultSet set = sql.executeQuery("select _term_key, term from mgd.voc_term where _vocab_key = 49");
+			ResultSet set = exec.executeQuery("select _term_key, term from mgd.voc_term where _vocab_key = 49");
 			while(set.next()) {
 				functionClasses.put(set.getInt("_term_key"), set.getString("term"));
 			}
@@ -302,11 +358,12 @@ public class ConsensusSNPIndexer extends Indexer {
 		}
 	}
 	
-	private void setupVariationClasses() throws SQLException {
+	private void setupVariationClasses(SQLExecutor exec) throws SQLException {
 		if(variationClasses == null) {
+			log.info("Setting Up Variation Classes: ");
 			variationClasses = new HashMap<Integer, String>();
 			
-			ResultSet set = sql.executeQuery("select _term_key, term from mgd.voc_term where _vocab_key = 50");
+			ResultSet set = exec.executeQuery("select _term_key, term from mgd.voc_term where _vocab_key = 50");
 			while(set.next()) {
 				variationClasses.put(set.getInt("_term_key"), set.getString("term"));
 			}
@@ -314,12 +371,13 @@ public class ConsensusSNPIndexer extends Indexer {
 		}
 	}
 	
-	private void setupPopulations() throws SQLException {
+	private void setupPopulations(SQLExecutor exec) throws SQLException {
 		if(populationsByPopulationKey == null || populationsBySubHandleKey == null) {
+			log.info("Setting Up Populations: ");
 			populationsByPopulationKey = new HashMap<Integer, PopulationSNP>();
 			populationsBySubHandleKey = new HashMap<Integer, PopulationSNP>();
 			
-			ResultSet set = sql.executeQuery(
+			ResultSet set = exec.executeQuery(
 				"select sp._population_key, sa.accid, sp.subhandle, sp._subhandle_key, sp.name "
 				+ "from snp.snp_population sp "
 				+ "left outer join snp.snp_accession sa on ("
@@ -341,10 +399,11 @@ public class ConsensusSNPIndexer extends Indexer {
 
 	}
 
-	private void setupMarkers() throws SQLException {
+	private void setupMarkers(SQLExecutor exec) throws SQLException {
 		if(markers == null) {
+			log.info("Setting Up Markers: ");
 			markers = new HashMap<Integer, Marker>();
-			ResultSet set = sql.executeQuery("select a.accid, m.name, m.symbol, m._marker_key from mgd.mrk_marker m, mgd.acc_accession a where m._marker_key = a._object_key and a._logicaldb_key = 1 and a._mgitype_key = 2 and a.preferred = 1 and m._organism_key = 1 and m._marker_status_key = 1");
+			ResultSet set = exec.executeQuery("select a.accid, m.name, m.symbol, m._marker_key from mgd.mrk_marker m, mgd.acc_accession a where m._marker_key = a._object_key and a._logicaldb_key = 1 and a._mgitype_key = 2 and a.preferred = 1 and m._organism_key = 1 and m._marker_status_key = 1");
 			
 			while(set.next()) {
 				Marker m = new Marker();
@@ -357,8 +416,8 @@ public class ConsensusSNPIndexer extends Indexer {
 		}
 	}
 
-	public int getMaxConsensus() throws SQLException {
-		ResultSet set = sql.executeQuery("select max(scs._consensussnp_key) as maxKey from snp.snp_consensussnp scs");
+	public int getMaxConsensus(SQLExecutor exec) throws SQLException {
+		ResultSet set = exec.executeQuery("select max(scs._consensussnp_key) as maxKey from snp.snp_consensussnp scs");
 		set.next();
 		int end = set.getInt("maxKey");
 		set.close();

@@ -19,39 +19,56 @@ import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.core.TimeValue;
-import org.jax.mgi.snpindexer.indexes.IndexerConfig;
+import org.jax.mgi.snpindexer.config.ConfigurationHelper;
+import org.jax.mgi.snpindexer.config.IndexerConfig;
+import org.jax.mgi.snpindexer.util.es.SiteIndexSettings;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class EsClientFactory {
 
-	public static RequestOptions LARGE_SEARCH_RESPONSE_REQUEST_OPTIONS = RequestOptions.DEFAULT.toBuilder().build();
-	private static List<RestHighLevelClient> clients;
+	//public static RequestOptions LARGE_SEARCH_RESPONSE_REQUEST_OPTIONS = RequestOptions.DEFAULT.toBuilder().build();
+	private static List<RestHighLevelClient> clusterClients;
 
-	private static List<RestHighLevelClient> getClients() {
+	private static List<RestHighLevelClient> getClusterClients() {
 
-		if (clients == null) {
+		if (clusterClients == null) {
 
-			clients = new ArrayList<>();
+			clusterClients = new ArrayList<>();
 
-			for (String host : ConfigurationHelper.getEsUrls()) {
-				RestClientBuilder client = RestClient.builder(new HttpHost(host, 9200));
-				client.setRequestConfigCallback(new RequestConfigCallback() {
+			for (List<String> cluster: ConfigurationHelper.getEsUrls()) {
+
+				HttpHost[] clusterHosts = new HttpHost[cluster.size()];
+				for(int i = 0; i < cluster.size(); i++) {
+					String host = cluster.get(i);
+					if(host.contains(":")) {
+						String[] array = host.split(":");
+						
+						clusterHosts[i] = new HttpHost(array[0], Integer.parseInt(array[1]));
+					} else {
+						clusterHosts[i] = new HttpHost(host, 9200);
+					}
+				}
+				
+				RestClientBuilder clusterClient = RestClient.builder(clusterHosts);
+				
+				clusterClient.setRequestConfigCallback(new RequestConfigCallback() {
 					public Builder customizeRequestConfig(Builder requestConfigBuilder) {
 						int hour = (60 * 60 * 1000);
 						int hours = 2 * hour;
 						return requestConfigBuilder.setConnectTimeout(5000).setSocketTimeout(hours).setConnectionRequestTimeout(hours);
 					}
 				});
-				clients.add(new RestHighLevelClient(client));
-				log.debug("Adding Host: " + host + ":" + 9200);
+
+				
+				clusterClients.add(new RestHighLevelClient(clusterClient));
 			}
 
-			log.info("Finished Connecting to ES clients: " + clients);
+			log.info("Finished Connecting to ES clusters: " + clusterClients);
 		}
 
-		return clients;
+		return clusterClients;
 
 	}
 
@@ -59,7 +76,7 @@ public class EsClientFactory {
 	public static List<BulkProcessor> getProcessors(IndexerConfig config) {
 		List<BulkProcessor> processors = new ArrayList<>();
 
-		for (final RestHighLevelClient client : getClients()) {
+		for (final RestHighLevelClient clusterClient : getClusterClients()) {
 			BulkProcessor bulkProcessor;
 			
 			BulkProcessor.Listener listener = new BulkProcessor.Listener() {
@@ -82,7 +99,7 @@ public class EsClientFactory {
 				}
 			};
 	
-			BulkProcessor.Builder builder = BulkProcessor.builder((request, bulkListener) -> client.bulkAsync(request, RequestOptions.DEFAULT, bulkListener), listener);
+			BulkProcessor.Builder builder = BulkProcessor.builder((request, bulkListener) -> clusterClient.bulkAsync(request, RequestOptions.DEFAULT, bulkListener), listener);
 			builder.setBulkActions(config.getBulkActions());
 			builder.setBulkSize(new ByteSizeValue(config.getBulkSize(), ByteSizeUnit.MB));
 			builder.setConcurrentRequests(config.getConcurrentRequests());
@@ -98,16 +115,20 @@ public class EsClientFactory {
 	}
 	
 	public static void createIndex(String indexName) throws Exception {
-		for (final RestHighLevelClient client : getClients()) {
+		for (final RestHighLevelClient clusterClient : getClusterClients()) {
 			CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
-			client.indices().create(createIndexRequest, RequestOptions.DEFAULT);
+			SiteIndexSettings settings = new SiteIndexSettings(true);
+			settings.buildSettings();
+			//System.out.println(settings);
+			createIndexRequest.settings(settings.getBuilder());
+			clusterClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
 		}
 	}
 	
 	public static void deleteIndex(String indexName) throws Exception {
-		for (final RestHighLevelClient client : getClients()) {
+		for (final RestHighLevelClient clusterClient : getClusterClients()) {
 			DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(indexName);
-			client.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
+			clusterClient.indices().delete(deleteIndexRequest, RequestOptions.DEFAULT);
 		}
 	}
 

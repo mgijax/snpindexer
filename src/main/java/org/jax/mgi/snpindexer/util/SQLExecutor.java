@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
+import org.jax.mgi.snpindexer.config.ConfigurationHelper;
 
 public class SQLExecutor {
 
@@ -92,7 +93,7 @@ public class SQLExecutor {
 			try {
 				con = DriverManager.getConnection(ConfigurationHelper.getDatabaseUrl(), ConfigurationHelper.getUser(), ConfigurationHelper.getPassword());
 				con.setAutoCommit(autoCommit);
-				log.info("Database Connection Initialized to: " + ConfigurationHelper.getDatabaseUrl());
+				log.debug("Database Connection Initialized to: " + ConfigurationHelper.getDatabaseUrl());
 			} catch (SQLException e) {
 				log.error("Database Connection ERROR: " + e.getMessage());
 				log.error("DB Url: " + ConfigurationHelper.getDatabaseUrl());
