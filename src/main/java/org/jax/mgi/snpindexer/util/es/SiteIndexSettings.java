@@ -16,7 +16,7 @@ public class SiteIndexSettings extends Settings {
 				//.field("mapping.total_fields.limit", "25000")
 				.field("number_of_replicas", "0")
 				.field("refresh_interval", "-1")
-				.field("number_of_shards", "1");
+				.field("number_of_shards", "4");
 			builder.endObject();
 		builder.endObject();
 	}

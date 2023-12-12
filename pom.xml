@@ -55,7 +55,7 @@
 			<artifactId>commons-lang3</artifactId>
 			<version>3.2.1</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>
@@ -82,7 +82,11 @@
 			<artifactId>process-display</artifactId>
 			<version>1.0.9</version>
 		</dependency>
-
+		<dependency>
+			<groupId>net.openhft</groupId>
+			<artifactId>chronicle-map</artifactId>
+			<version>3.24ea1</version>
+		</dependency>
 		<dependency>
 			<groupId>org.elasticsearch</groupId>
 			<artifactId>elasticsearch</artifactId>
@@ -115,7 +119,7 @@
 			<artifactId>commons-math3</artifactId>
 			<version>3.6.1</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.jax.mgi</groupId>
 			<artifactId>snpdatamodel</artifactId>

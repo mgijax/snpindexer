@@ -8,9 +8,9 @@ public enum IndexerConfig {
 	
 	// (SolrCoreName, IndexerClass, ChunkSize, CommitTimeout, DB Fetch Size)
 	
-	ConsensusSNPIndexer("ConsensusSNPIndex", "consensus_snp_index", ConsensusSNPIndexer.class,  50_000, 10_000, 8, 10_000, 10, 2),
-	SearchSNPIndexer(   "SearchSNPIndex",    "search_snp_index",    SearchSNPIndexer.class,      500,   500, 4, 100_000, 10, 2),
-	AlleleSNPIndexer(   "AlleleSNPIndex",    "allele_snp_index",    AlleleSNPIndexer.class,     1000,  1000, 4, 100_000, 10, 2)
+	ConsensusSNPIndexer("ConsensusSNPIndex", "consensus_snp_index", ConsensusSNPIndexer.class, 10_000,  5_000, 4, 4, 10_000, 10, 4),
+	SearchSNPIndexer(   "SearchSNPIndex",    "search_snp_index",    SearchSNPIndexer.class,    10_000,  5_000, 8, 4, 10_000, 10, 4),
+	AlleleSNPIndexer(   "AlleleSNPIndex",    "allele_snp_index",    AlleleSNPIndexer.class,    10_000,  5_000, 8, 4, 10_000, 10, 4)
 	;
 	
 	// Name of the indexer for program args
@@ -23,7 +23,9 @@ public enum IndexerConfig {
 	// Batch size to process from the database
 	private int chunkSize;
 	// Number of workers connecting to the database
-	private int workerCount;
+	private int dbWorkerCount;
+	// Number of workers converting objects to json
+	private int jsonWorkerCount;
 	// Java Class of the indexer
 	private Class<?> clazz;
 	// Name of Solr Core
@@ -35,14 +37,14 @@ public enum IndexerConfig {
 	// Number of concurrent batch requests to the server at once
 	private int concurrentRequests; // Too many will cause the server to 429
 
-	IndexerConfig(String indexerName, String indexName, Class<?> clazz, int cursorSize, int chunkSize, int workerCount, int bulkActions, long bulkSize, int concurrentRequests) {
+	IndexerConfig(String indexerName, String indexName, Class<?> clazz, int cursorSize, int chunkSize, int dbWorkerCount, int jsonWorkerCount, int bulkActions, long bulkSize, int concurrentRequests) {
 		this.indexerName = indexerName;
 		this.indexName = indexName;
 		this.clazz = clazz;
 		this.cursorSize = cursorSize;
 		this.chunkSize = chunkSize;
-		this.workerCount = workerCount;
-
+		this.dbWorkerCount = dbWorkerCount;
+		this.jsonWorkerCount = jsonWorkerCount;
 		this.bulkActions = bulkActions;
 		this.bulkSize = bulkSize;
 		this.concurrentRequests = concurrentRequests;
@@ -54,8 +56,11 @@ public enum IndexerConfig {
 	public int getChunkSize() {
 		return chunkSize;
 	}
-	public int getWorkerCount() {
-		return workerCount;
+	public int getDbWorkerCount() {
+		return dbWorkerCount;
+	}
+	public int getJsonWorkerCount() {
+		return jsonWorkerCount;
 	}
 	public Class<?> getClazz() {
 		return clazz;
