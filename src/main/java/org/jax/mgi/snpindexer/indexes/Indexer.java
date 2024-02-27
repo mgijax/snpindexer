@@ -115,6 +115,7 @@ public abstract class Indexer extends Thread {
 			index();
 			log.info("Waiting for bulkProcessors to finish");
 			for (BulkProcessor processor: documentProcessors) {
+				processor.flush();
 				processor.close();
 			}
 			refreshIndex();

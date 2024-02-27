@@ -13,9 +13,14 @@
 
 	<artifactId>snpindexer</artifactId>
 	<groupId>org.jax.mgi</groupId>
-	<packaging>jar</packaging>
+	<packaging>pom</packaging>
 	<version>0.0.1</version>
 	<name>SNP Indexer</name>
+
+   <modules>
+      <module>../lib_java_fe</module>
+      <module>../snpdatamodel</module>
+   </modules>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
