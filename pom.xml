@@ -4,23 +4,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>org.jax</groupId>
-		<artifactId>mgi</artifactId>
-		<version>${revision}</version>
-		<relativePath>../mgi_java_builder/pom.xml</relativePath>
-	</parent>
-
 	<artifactId>snpindexer</artifactId>
 	<groupId>org.jax.mgi</groupId>
-	<packaging>pom</packaging>
+	<packaging>jar</packaging>
 	<version>0.0.1</version>
 	<name>SNP Indexer</name>
-
-   <modules>
-      <module>../lib_java_fe</module>
-      <module>../snpdatamodel</module>
-   </modules>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -127,7 +115,13 @@
 
 		<dependency>
 			<groupId>org.jax.mgi</groupId>
+			<artifactId>lib_java_fe</artifactId>
+                        <version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jax.mgi</groupId>
 			<artifactId>snpdatamodel</artifactId>
+                        <version>${project.version}</version>
 		</dependency>
 	</dependencies>
 
