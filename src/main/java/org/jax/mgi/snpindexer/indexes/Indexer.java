@@ -99,7 +99,7 @@ public abstract class Indexer extends Thread {
 	}
 	
 	private void refreshIndex() {
-		
+		EsClientFactory.setRefreshInterval(config.getIndexName(), "1s");
 	}
 
 	public void setupServer() {

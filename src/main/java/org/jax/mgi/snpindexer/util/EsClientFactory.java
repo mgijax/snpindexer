@@ -132,4 +132,8 @@ public class EsClientFactory {
 		}
 	}
 
+        public static void setRefreshInterval (String indexName, String interval) {
+                
+        }
+
 }
