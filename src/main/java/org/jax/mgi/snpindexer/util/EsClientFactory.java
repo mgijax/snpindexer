@@ -1,15 +1,19 @@
 package org.jax.mgi.snpindexer.util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig.Builder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.bulk.BackoffPolicy;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
@@ -28,7 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EsClientFactory {
 
-	//public static RequestOptions LARGE_SEARCH_RESPONSE_REQUEST_OPTIONS = RequestOptions.DEFAULT.toBuilder().build();
+	// public static RequestOptions LARGE_SEARCH_RESPONSE_REQUEST_OPTIONS =
+	// RequestOptions.DEFAULT.toBuilder().build();
 	private static List<RestHighLevelClient> clusterClients;
 
 	private static List<RestHighLevelClient> getClusterClients() {
@@ -37,22 +42,22 @@ public class EsClientFactory {
 
 			clusterClients = new ArrayList<>();
 
-			for (List<String> cluster: ConfigurationHelper.getEsUrls()) {
+			for (List<String> cluster : ConfigurationHelper.getEsUrls()) {
 
 				HttpHost[] clusterHosts = new HttpHost[cluster.size()];
-				for(int i = 0; i < cluster.size(); i++) {
+				for (int i = 0; i < cluster.size(); i++) {
 					String host = cluster.get(i);
-					if(host.contains(":")) {
+					if (host.contains(":")) {
 						String[] array = host.split(":");
-						
+
 						clusterHosts[i] = new HttpHost(array[0], Integer.parseInt(array[1]));
 					} else {
 						clusterHosts[i] = new HttpHost(host, 9200);
 					}
 				}
-				
+
 				RestClientBuilder clusterClient = RestClient.builder(clusterHosts);
-				
+
 				clusterClient.setRequestConfigCallback(new RequestConfigCallback() {
 					public Builder customizeRequestConfig(Builder requestConfigBuilder) {
 						int hour = (60 * 60 * 1000);
@@ -61,7 +66,6 @@ public class EsClientFactory {
 					}
 				});
 
-				
 				clusterClients.add(new RestHighLevelClient(clusterClient));
 			}
 
@@ -72,59 +76,58 @@ public class EsClientFactory {
 
 	}
 
-
 	public static List<BulkProcessor> getProcessors(IndexerConfig config) {
 		List<BulkProcessor> processors = new ArrayList<>();
 
 		for (final RestHighLevelClient clusterClient : getClusterClients()) {
 			BulkProcessor bulkProcessor;
-			
+
 			BulkProcessor.Listener listener = new BulkProcessor.Listener() {
 				@Override
 				public void beforeBulk(long executionId, BulkRequest request) {
 				}
-	
+
 				@Override
 				public void afterBulk(long executionId, BulkRequest request, BulkResponse response) {
-					if(response.hasFailures()) {
+					if (response.hasFailures()) {
 						log.info("Size: " + request.requests().size() + " MB: " + request.estimatedSizeInBytes() + " Time: " + response.getTook() + " Bulk Requet Finished");
 						log.info(response.buildFailureMessage());
 					}
 				}
-	
+
 				@Override
 				public void afterBulk(long executionId, BulkRequest request, Throwable failure) {
 					log.error("Bulk Request Failure: " + failure.getMessage());
 					log.error("Finished Adding failed requests to bulkProcessor: ");
 				}
 			};
-	
+
 			BulkProcessor.Builder builder = BulkProcessor.builder((request, bulkListener) -> clusterClient.bulkAsync(request, RequestOptions.DEFAULT, bulkListener), listener);
 			builder.setBulkActions(config.getBulkActions());
 			builder.setBulkSize(new ByteSizeValue(config.getBulkSize(), ByteSizeUnit.MB));
 			builder.setConcurrentRequests(config.getConcurrentRequests());
 			builder.setBackoffPolicy(BackoffPolicy.exponentialBackoff(TimeValue.timeValueSeconds(1L), 60));
-			
+
 			bulkProcessor = builder.build();
-			
+
 			processors.add(bulkProcessor);
 		}
 
 		return processors;
 
 	}
-	
+
 	public static void createIndex(String indexName) throws Exception {
 		for (final RestHighLevelClient clusterClient : getClusterClients()) {
 			CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
 			SiteIndexSettings settings = new SiteIndexSettings(true);
 			settings.buildSettings();
-			//System.out.println(settings);
+			// System.out.println(settings);
 			createIndexRequest.settings(settings.getBuilder());
 			clusterClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
 		}
 	}
-	
+
 	public static void deleteIndex(String indexName) throws Exception {
 		for (final RestHighLevelClient clusterClient : getClusterClients()) {
 			DeleteIndexRequest deleteIndexRequest = new DeleteIndexRequest(indexName);
@@ -132,8 +135,17 @@ public class EsClientFactory {
 		}
 	}
 
-        public static void setRefreshInterval (String indexName, String interval) {
-                
-        }
+	public static void setRefreshInterval(String indexName, String interval) throws Exception {
+		for (final RestHighLevelClient clusterClient : getClusterClients()) {
+			Map<String, String> settings = new HashMap<>();
+			settings.put("refresh_interval", interval);
+			log.info("Setting Refresh Interval: " + settings);
+			UpdateSettingsRequest request = new UpdateSettingsRequest();
+			request.indices(indexName);
+			request.settings(settings);
+			AcknowledgedResponse resp = clusterClient.indices().putSettings(request, RequestOptions.DEFAULT);
+			log.info("Settings Change Complete: " + resp.isAcknowledged());
+		}
+	}
 
 }

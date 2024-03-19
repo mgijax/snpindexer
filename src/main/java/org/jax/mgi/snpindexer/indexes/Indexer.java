@@ -99,7 +99,12 @@ public abstract class Indexer extends Thread {
 	}
 	
 	private void refreshIndex() {
-		EsClientFactory.setRefreshInterval(config.getIndexName(), "1s");
+		try {
+			EsClientFactory.setRefreshInterval(config.getIndexName(), "1s");
+		} catch (Exception e) {
+			log.error("Refreshing Index Failed: " + config.getIndexName());
+			e.printStackTrace();
+		}
 	}
 
 	public void setupServer() {
