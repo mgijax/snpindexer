@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.jax.mgi.snpindexer.config.ConfigurationHelper;
 
 public class SQLExecutor {
