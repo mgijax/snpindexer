@@ -3,18 +3,18 @@ package org.jax.mgi.snpindexer;
 import java.util.Date;
 import java.util.HashMap;
 
-import org.apache.logging.log4j.Logger;
 import org.jax.mgi.snpindexer.config.ConfigurationHelper;
 import org.jax.mgi.snpindexer.config.IndexerConfig;
 import org.jax.mgi.snpindexer.indexes.Indexer;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class Main {
 	
 	public static void main(String[] args) {
 		ConfigurationHelper.init();
-		
-		Logger log = Logger.getLogger(Main.class);
-		
+
 		HashMap<String, Indexer> indexers = new HashMap<String, Indexer>();
 
 		boolean threaded = ConfigurationHelper.isThreaded();

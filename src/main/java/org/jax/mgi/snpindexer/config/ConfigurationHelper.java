@@ -6,14 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.logging.log4j.BasicConfigurator;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.PropertyConfigurator;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ConfigurationHelper {
 	
 	private static String driver = null;
@@ -21,32 +19,14 @@ public class ConfigurationHelper {
 	private static String user = null;
 	private static String password = null;
 	private static List<List<String>> esUrls = null;
-	private static String logFilePath = null;
-	private static String logFileName = null;
 	private static boolean debug = false;
 	private static boolean threaded = false;
-	private static Logger log;
 	
 	public static void init() {
 		InputStream in = ConfigurationHelper.class.getClassLoader().getResourceAsStream("log4j.properties");
-		Properties props = new Properties();
-		
-		if(in == null) {
-			System.out.println("No log4j.properties file. Output going to stdout this is most likely not what you want");
-			BasicConfigurator.configure();
-			Logger.getRootLogger().setLevel(Level.INFO);
-		} else {
-			try {
-				props.load(in);
-				logFileName = props.getProperty("log4j.appender.file.File");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		log = Logger.getLogger(ConfigurationHelper.class);
+		//Properties props = new Properties();
+
 		log.info("Loading System Properties via -D paramaters");
-		
 		
 		// Reads this next set of params from the command line -D params
 		driver = System.getProperty("PG_DBDRIVER");
@@ -63,9 +43,6 @@ public class ConfigurationHelper {
 		
 		esUrls = parseJSONArrayProperty(System.getProperty("ES_URLS"));
 		if(esUrls != null) { log.info("Found: -D ES_URL=" + esUrls); }
-		
-		logFilePath = System.getProperty("LOG_DIR");
-		if(logFilePath != null) { log.info("Found: -D LOG_DIR=" + logFilePath); }
 		
 		debug = "true".equals(System.getProperty("DEBUG"));
 		if(debug) { log.info("Found: -D DEBUG=" + debug); }
@@ -102,10 +79,6 @@ public class ConfigurationHelper {
 				if(esUrls == null) {
 					esUrls = parseJSONArrayProperty(configurationProperties.getProperty("esUrls"));
 					if(esUrls != null) { log.info("Config File: esUrl=" + esUrls); }
-				}
-				if(logFilePath == null) {
-					logFilePath = configurationProperties.getProperty("logFilePath");
-					if(logFilePath != null) { log.info("Config File: logFilePath=" + logFilePath); }
 				}
 				if(!debug) {
 					debug = "true".equals(configurationProperties.getProperty("debug"));
@@ -145,10 +118,6 @@ public class ConfigurationHelper {
 			esUrls = parseJSONArrayProperty(System.getenv("ES_URLS"));
 			if(esUrls != null) { log.info("Found Enviroment ENV[ES_URLS]=" + esUrls); }
 		}
-		if(logFilePath == null) {
-			logFilePath = System.getenv("LOG_DIR");
-			if(logFilePath != null) { log.info("Found Enviroment ENV[LOG_DIR]=" + logFilePath); }
-		}
 		if(!debug) {
 			debug = "true".equals(System.getenv("DEBUG"));
 			if(debug) { log.info("Found Enviroment ENV[DEBUG]=" + debug); }
@@ -185,22 +154,7 @@ public class ConfigurationHelper {
 			log.info("Setting default: esUrl=" + esUrls);
 		}
 		
-		if(logFileName == null || logFileName.length() == 0) {
-			logFileName = "snpindexer.log";
-		}
-		
-		if(logFilePath != null && logFilePath.length() > 0) {
-			logFilePath = logFilePath + "/" + logFileName;
-			props.setProperty("log4j.appender.file.File", logFilePath);
-			log.info("Setting default: logFilePath=" + logFilePath);
-		} else {
-			logFilePath = logFileName;
-			log.info("Setting default: logFilePath=" + logFilePath);
-		}
-		
-		props.setProperty("log4j.appender.file.File", logFilePath);
 		printProperties();
-		PropertyConfigurator.configure(props);
 	}
 	
 	private static List<List<String>> parseJSONArrayProperty(String property) {
@@ -224,7 +178,6 @@ public class ConfigurationHelper {
 		log.info("\tuser: " + user);
 		log.info("\tpassword: " + password);
 		log.info("\tesUrls: " + esUrls);
-		log.info("\tlogFilePath: " + logFilePath);
 		log.info("\tdebug: " + debug);
 		log.info("\tthreaded: " + threaded);
 	}
@@ -243,9 +196,6 @@ public class ConfigurationHelper {
 	}
 	public static List<List<String>> getEsUrls() {
 		return esUrls;
-	}
-	public static String getLogFilePath() {
-		return logFilePath;
 	}
 	public static boolean isDebug() {
 		return debug;

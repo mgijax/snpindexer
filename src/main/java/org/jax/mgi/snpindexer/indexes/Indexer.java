@@ -3,7 +3,6 @@ package org.jax.mgi.snpindexer.indexes;
 import java.text.DecimalFormat;
 import java.util.List;
 
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -14,13 +13,14 @@ import org.jax.mgi.snpindexer.util.EsClientFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.extern.slf4j.Slf4j;
 import net.nilosplace.process_display.ProcessDisplayHelper;
 
+@Slf4j
 public abstract class Indexer extends Thread {
 
 	//protected SQLExecutor sql;
-	protected Logger log = Logger.getLogger(getClass());
-
+	
 	protected IndexerConfig config;
 	protected Runtime runtime = Runtime.getRuntime();
 	protected DecimalFormat df = new DecimalFormat("#.00");

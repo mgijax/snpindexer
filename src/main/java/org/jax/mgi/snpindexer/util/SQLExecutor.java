@@ -7,9 +7,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
-import org.apache.logging.log4j.Logger;
 import org.jax.mgi.snpindexer.config.ConfigurationHelper;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class SQLExecutor {
 
 	protected Connection con = null;
@@ -20,8 +22,7 @@ public class SQLExecutor {
 	private int	cursorSize = 0;
 	private boolean autoCommit = true;
 	private boolean debug = false;
-	private Logger log = Logger.getLogger(SQLExecutor.class);
-	
+
 	public SQLExecutor(int cursorSize, boolean autoCommit) {
 		this.cursorSize  = cursorSize;
 		this.autoCommit = autoCommit;

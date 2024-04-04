@@ -15,6 +15,9 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class AlleleSNPIndexer extends Indexer {
 
 	private HashMap<String, String> variationMap = new HashMap<String, String>();
@@ -246,8 +249,8 @@ public class AlleleSNPIndexer extends Indexer {
 					} catch (NullPointerException e) {
 						log.info(set.getString("_object_key"));
 						log.info("Allele: " + allele);
-						log.info(allelesStrainsMap.get(set.getString("_object_key")));
-						log.info(allelesStrainsMap.get(set.getString("_object_key")).keySet());
+						log.info(allelesStrainsMap.get(set.getString("_object_key")).toString());
+						log.info(allelesStrainsMap.get(set.getString("_object_key")).keySet().toString());
 					}
 					
 					// Compute the strains that have a different allele
