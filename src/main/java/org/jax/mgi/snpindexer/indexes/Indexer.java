@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.xcontent.XContentType;
 import org.jax.mgi.snpdatamodel.document.BaseESDocument;
 import org.jax.mgi.snpindexer.config.IndexerConfig;
 import org.jax.mgi.snpindexer.util.EsClientFactory;
