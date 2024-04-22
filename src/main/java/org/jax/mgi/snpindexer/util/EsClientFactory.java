@@ -25,7 +25,8 @@ import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.core.TimeValue;
 import org.jax.mgi.snpindexer.config.ConfigurationHelper;
 import org.jax.mgi.snpindexer.config.IndexerConfig;
-import org.jax.mgi.snpindexer.util.es.SiteIndexSettings;
+import org.jax.mgi.snpindexer.util.es.Mapping;
+import org.jax.mgi.snpindexer.util.es.Setting;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -117,13 +118,15 @@ public class EsClientFactory {
 
 	}
 
-	public static void createIndex(String indexName) throws Exception {
+	public static void createIndex(String indexName, Setting setting, Mapping mapping) throws Exception {
 		for (final RestHighLevelClient clusterClient : getClusterClients()) {
 			CreateIndexRequest createIndexRequest = new CreateIndexRequest(indexName);
-			SiteIndexSettings settings = new SiteIndexSettings(true);
-			settings.buildSettings();
-			// System.out.println(settings);
-			createIndexRequest.settings(settings.getBuilder());
+			if(setting != null) {
+				createIndexRequest.settings(setting.getBuilder());
+			}
+			if(mapping != null) {
+				createIndexRequest.mapping(mapping.getBuilder());
+			}
 			clusterClient.indices().create(createIndexRequest, RequestOptions.DEFAULT);
 		}
 	}

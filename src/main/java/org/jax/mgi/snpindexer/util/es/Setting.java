@@ -2,9 +2,9 @@ package org.jax.mgi.snpindexer.util.es;
 
 import java.io.IOException;
 
-public abstract class Settings extends Builder {
+public abstract class Setting extends Builder {
 
-	public Settings(Boolean pretty) {
+	public Setting(Boolean pretty) {
 		super(pretty);
 	}
 

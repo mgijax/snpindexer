@@ -2,7 +2,7 @@ package org.jax.mgi.snpindexer.util.es;
 
 import java.io.IOException;
 
-public class SiteIndexSettings extends Settings {
+public class SiteIndexSettings extends Setting {
 
 	public SiteIndexSettings(Boolean pretty) {
 		super(pretty);

@@ -79,7 +79,7 @@ public abstract class Indexer extends Thread {
 		String index = config.getIndexName();
 		log.info("Creating index: " + index);
 		try {
-			EsClientFactory.createIndex(index);
+			EsClientFactory.createIndex(config.getIndexName(), config.getSettings(), config.getMappings());
 		} catch (Exception e) {
 			log.error("Indexing Failed: " + index);
 			e.printStackTrace();
