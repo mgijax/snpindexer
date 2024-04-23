@@ -181,6 +181,7 @@ public class AlleleSNPIndexer extends Indexer {
 							e.printStackTrace();
 						}
 					}
+					
 					alleleDocPList.clear();
 					indexJsonDocuments(docCache);
 					docCache.clear();
@@ -284,19 +285,21 @@ public class AlleleSNPIndexer extends Indexer {
 
 		AlleleSNPDocument doc = new AlleleSNPDocument();
 		
+		String object_key = set.getString("_object_key");
+		
 		doc.setConsensussnp_accid(set.getString("consensussnp_accid"));
 		doc.setChromosome(set.getString("chromosome"));
 		doc.setStartcoordinate(set.getDouble("startcoordinate"));
 		doc.setVarclass(variationMap.get(set.getString("_varclass_key")));
 		
-		if(functionClassesMap.containsKey(set.getString("_object_key"))) {
-			doc.setFxn(functionClassesMap.get(set.getString("_object_key")));
+		if(functionClassesMap.containsKey(object_key)) {
+			doc.setFxn(functionClassesMap.get(object_key));
 		}
-		if(markersMap.containsKey(set.getString("_object_key"))) {
-			doc.setMarker_accid(markersMap.get(set.getString("_object_key")));
+		if(markersMap.containsKey(object_key)) {
+			doc.setMarker_accid(markersMap.get(object_key));
 		}
 		
-		doc.setStrains(strainsMap.get(set.getString("_object_key")));
+		doc.setStrains(strainsMap.get(object_key));
 		
 		return doc;
 	}
@@ -307,10 +310,11 @@ public class AlleleSNPIndexer extends Indexer {
 		ResultSet set = exec.executeQuery("select scm._consensussnp_key, scm._marker_key from snp.snp_consensussnp_marker scm where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " group by scm._consensussnp_key, scm._marker_key");
 		
 		while(set.next()) {
-			ArrayList<String> list = markersMap.get(set.getString("_consensussnp_key"));
+			String consensussnp_key = set.getString("_consensussnp_key");
+			ArrayList<String> list = markersMap.get(consensussnp_key);
 			if(list == null) {
 				list = new ArrayList<String>();
-				markersMap.put(set.getString("_consensussnp_key"), list);
+				markersMap.put(consensussnp_key, list);
 			}
 			list.add(markerMap.get(set.getString("_marker_key")));
 		}
@@ -324,10 +328,11 @@ public class AlleleSNPIndexer extends Indexer {
 		ResultSet set = exec.executeQuery("select scm._consensussnp_key, scm._fxn_key from snp.snp_consensussnp_marker scm where scm._consensussnp_key > " + start + " and scm._consensussnp_key <= " + end + " group by scm._consensussnp_key, scm._fxn_key");
 		
 		while(set.next()) {
-			ArrayList<String> list = functionClassesMap.get(set.getString("_consensussnp_key"));
+			String consensussnp_key = set.getString("_consensussnp_key");
+			ArrayList<String> list = functionClassesMap.get(consensussnp_key);
 			if(list == null) {
 				list = new ArrayList<String>();
-				functionClassesMap.put(set.getString("_consensussnp_key"), list);
+				functionClassesMap.put(consensussnp_key, list);
 			}
 			list.add(functionMap.get(set.getString("_fxn_key")));
 		}
@@ -341,10 +346,11 @@ public class AlleleSNPIndexer extends Indexer {
 		ResultSet set = exec.executeQuery("select scs._consensussnp_key, scs._mgdstrain_key from snp.snp_consensussnp_strainallele scs where scs._consensussnp_key > " + start + " and scs._consensussnp_key <= " + end + " ");
 		
 		while (set.next()) {
-			ArrayList<String> list = strainsMap.get(set.getString("_consensussnp_key"));
+			String consensussnp_key = set.getString("_consensussnp_key");
+			ArrayList<String> list = strainsMap.get(consensussnp_key);
 			if(list == null) {
 				list = new ArrayList<String>();
-				strainsMap.put(set.getString("_consensussnp_key"), list);
+				strainsMap.put(consensussnp_key, list);
 			}
 			list.add(strainMap.get(set.getString("_mgdstrain_key")));
 		}
@@ -358,10 +364,11 @@ public class AlleleSNPIndexer extends Indexer {
 		ResultSet set = exec.executeQuery("select scs._consensussnp_key, scs._mgdstrain_key, scs.allele from snp.snp_consensussnp_strainallele scs where scs.allele in ('A', 'C', 'G', 'T') and scs._consensussnp_key > " + start + " and scs._consensussnp_key <= " + end + " ");
 		
 		while (set.next()) {
-			HashMap<String, ArrayList<String>> list = allelesStrainsMap.get(set.getString("_consensussnp_key"));
+			String consensussnp_key = set.getString("_consensussnp_key");
+			HashMap<String, ArrayList<String>> list = allelesStrainsMap.get(consensussnp_key);
 			if(list == null) {
 				list = new HashMap<String, ArrayList<String>>();
-				allelesStrainsMap.put(set.getString("_consensussnp_key"), list);
+				allelesStrainsMap.put(consensussnp_key, list);
 			}
 			
 			ArrayList<String> strainList = list.get(set.getString("allele"));

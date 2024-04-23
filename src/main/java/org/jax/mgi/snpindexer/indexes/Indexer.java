@@ -25,8 +25,8 @@ public abstract class Indexer extends Thread {
 	protected Runtime runtime = Runtime.getRuntime();
 	protected DecimalFormat df = new DecimalFormat("#.00");
 
-	protected ProcessDisplayHelper display = new ProcessDisplayHelper(1000);
-	protected ProcessDisplayHelper jsonDisplay = new ProcessDisplayHelper(1000);
+	protected ProcessDisplayHelper display = new ProcessDisplayHelper(5000);
+	protected ProcessDisplayHelper jsonDisplay = new ProcessDisplayHelper(5000);
 	
 	private List<BulkProcessor> documentProcessors;
 	private ObjectMapper mapper = new ObjectMapper();

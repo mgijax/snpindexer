@@ -14,15 +14,22 @@ public enum IndexerConfig {
 	
 	// (SolrCoreName, IndexerClass, ChunkSize, CommitTimeout, DB Fetch Size)
 	
-	ConsensusSNPIndexer("ConsensusSNPIndex", "consensus_snp_index", ConsensusSNPIndexer.class, SiteIndexSettings.class, ConsensusSNPIndexMappings.class, 10_000,  5_000, 4, 4, 10_000, 10, 4),
-	SearchSNPIndexer(   "SearchSNPIndex",    "search_snp_index",    SearchSNPIndexer.class,    SiteIndexSettings.class, SearchSNPIndexMappings.class, 10_000,  5_000, 8, 4, 10_000, 10, 4),
-	AlleleSNPIndexer(   "AlleleSNPIndex",    "allele_snp_index",    AlleleSNPIndexer.class,    SiteIndexSettings.class, AlleleSNPIndexMappings.class, 10_000,  5_000, 8, 4, 10_000, 10, 4)
+	ConsensusSNPIndexer("ConsensusSNPIndex", "consensus_snp_index", ConsensusSNPIndexer.class, SiteIndexSettings.class, ConsensusSNPIndexMappings.class, 100_000, 10_000, 4, 4,  5_000, 15, 4), // Average Doc Size 2900 bytes
+	SearchSNPIndexer(   "SearchSNPIndex",    "search_snp_index",    SearchSNPIndexer.class,    SiteIndexSettings.class, SearchSNPIndexMappings.class,    100_000, 22_500, 4, 4, 30_000, 15, 4), // Average Doc Size 345 bytes
+	AlleleSNPIndexer(   "AlleleSNPIndex",    "allele_snp_index",    AlleleSNPIndexer.class,    SiteIndexSettings.class, AlleleSNPIndexMappings.class,    100_000, 20_000, 4, 4, 22_500, 15, 4) // Average Doc Size 485 bytes
 	;
 	
 	// Name of the indexer for program args
 	private String indexerName;
 	// Name of index in ES
 	private String indexName;
+	
+	// Java Class of the indexer
+	private Class<?> clazz;
+	// Java Class of the settings for this indexer
+	private Class<?> settingClazz;
+	// Java Class of the mappings for this indexer
+	private Class<?> mappingClazz;
 	
 	// Batch size for cursor to the database
 	private int cursorSize;
@@ -32,15 +39,6 @@ public enum IndexerConfig {
 	private int dbWorkerCount;
 	// Number of workers converting objects to json
 	private int jsonWorkerCount;
-	// Java Class of the indexer
-	private Class<?> clazz;
-	
-	// Java Class of the settings for this indexer
-	private Class<?> settingClazz;
-	// Java Class of the mappings for this indexer
-	private Class<?> mappingClazz;
-
-	
 	// Number of documents to index in one batch
 	private int bulkActions;
 	// Max size in MB for the batch target = 10mb
