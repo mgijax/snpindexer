@@ -20,7 +20,7 @@ public abstract class Mapping extends Builder {
 		String type;
 		String analyzer;
 		boolean index;
-		boolean dynamic;
+		boolean enabled;
 		boolean autocomplete;
 		boolean classicText;
 		boolean htmlSmoosh;
@@ -38,7 +38,7 @@ public abstract class Mapping extends Builder {
 			this.name = name;
 			this.type = type;
 			this.index = true;
-			this.dynamic = true;
+			this.enabled = true;
 		}
 
 		public FieldBuilder analyzer(String analyzer) {
@@ -101,8 +101,8 @@ public abstract class Mapping extends Builder {
 			return this;
 		}
 		
-		public FieldBuilder notDynamic() {
-			this.dynamic = false;
+		public FieldBuilder notEnabled() {
+			this.enabled = false;
 			return this;
 		}
 		
@@ -133,7 +133,7 @@ public abstract class Mapping extends Builder {
 			builder.startObject(name);
 			if(type != null) builder.field("type", type);
 			if(!index) builder.field("index", false);
-			if(!dynamic) builder.field("dynamic", false);
+			if(!enabled) builder.field("enabled", false);
 			if(analyzer != null) builder.field("analyzer", analyzer);
 			if(symbol || autocomplete || keyword || keywordAutocomplete || synonym || sort || standardText) {
 				builder.startObject("fields");

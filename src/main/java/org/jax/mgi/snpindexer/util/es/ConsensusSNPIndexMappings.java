@@ -20,7 +20,7 @@ public class ConsensusSNPIndexMappings extends Mapping {
 			for(String keywordField: keywordFields) {
 				new FieldBuilder(builder, keywordField, "keyword").build();
 			}
-			new FieldBuilder(builder, "objectJSONData", "nested").notDynamic().build();	
+			new FieldBuilder(builder, "objectJSONData", "object").notEnabled().build();
 			builder.endObject().endObject();
 		} catch (IOException e) {
 			e.printStackTrace();
