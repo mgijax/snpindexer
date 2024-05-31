@@ -1,5 +1,5 @@
 driver=org.postgresql.Driver
-databaseUrl=jdbc:postgresql://bhmgidb09lt/scrumbob
+databaseUrl=jdbc:postgresql://mgi-testdb4.jax.org/pub_dev
 user=mgd_dbo
 password=db0dev
 #esUrls=[["localhost:9201","localhost:9202","localhost:9203","localhost:9204"]]
