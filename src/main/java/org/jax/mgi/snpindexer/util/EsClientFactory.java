@@ -139,16 +139,24 @@ public class EsClientFactory {
 	}
 
 	public static void setRefreshInterval(String indexName, String interval) throws Exception {
+                setSetting(indexName, "refresh_interval", interval);
+	}
+
+	public static void setMaxResultWindow(String indexName, String size) throws Exception {
+                setSetting(indexName, "max_result_window", size);
+	}
+
+        private static void setSetting(String indexName, String settingName, String value) throws Exception {
 		for (final RestHighLevelClient clusterClient : getClusterClients()) {
 			Map<String, String> settings = new HashMap<>();
-			settings.put("refresh_interval", interval);
-			log.info("Setting Refresh Interval: " + settings);
+			settings.put(settingName, value);
+			log.info("Setting: " + settings);
 			UpdateSettingsRequest request = new UpdateSettingsRequest();
 			request.indices(indexName);
 			request.settings(settings);
 			AcknowledgedResponse resp = clusterClient.indices().putSettings(request, RequestOptions.DEFAULT);
 			log.info("Settings Change Complete: " + resp.isAcknowledged());
 		}
-	}
+        }
 
 }

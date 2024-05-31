@@ -101,6 +101,7 @@ public abstract class Indexer extends Thread {
 	private void refreshIndex() {
 		try {
 			EsClientFactory.setRefreshInterval(config.getIndexName(), "1s");
+			EsClientFactory.setMaxResultWindow(config.getIndexName(), "100000");
 		} catch (Exception e) {
 			log.error("Refreshing Index Failed: " + config.getIndexName());
 			e.printStackTrace();
