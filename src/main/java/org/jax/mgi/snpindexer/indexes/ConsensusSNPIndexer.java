@@ -321,7 +321,7 @@ public class ConsensusSNPIndexer extends Indexer {
 			c.setChromosome(set.getString("chromosome"));
 			c.setIupaccode(set.getString("iupaccode"));
 			c.setMultiCoord(set.getInt("ismulticoord") == 1);
-			c.setStartCoordinate((int)set.getDouble("startcoordinate"));
+			c.setStartCoordinate(set.getLong("startcoordinate"));
 			c.setStrand(set.getString("strand"));
 			c.setVariationClass(variationClasses.get(set.getString("_varclass_key")));
 			

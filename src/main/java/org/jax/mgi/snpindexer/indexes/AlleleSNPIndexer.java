@@ -289,7 +289,7 @@ public class AlleleSNPIndexer extends Indexer {
 		
 		doc.setConsensussnp_accid(set.getString("consensussnp_accid"));
 		doc.setChromosome(set.getString("chromosome"));
-		doc.setStartcoordinate(set.getDouble("startcoordinate"));
+		doc.setStartcoordinate(set.getLong("startcoordinate"));
 		doc.setVarclass(variationMap.get(set.getString("_varclass_key")));
 		
 		if(functionClassesMap.containsKey(object_key)) {
