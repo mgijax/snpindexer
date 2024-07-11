@@ -1,0 +1,7 @@
+driver=org.postgresql.Driver
+databaseUrl=jdbc:postgresql://bhmgidb07lp.jax.org/pub
+user=mgd_dbo
+password=db0dev
+esUrls=[["bhmgisnp01lp.jax.org:9200"]]
+debug=false
+threaded=true
