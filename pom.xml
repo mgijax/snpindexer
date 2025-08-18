@@ -71,32 +71,16 @@
 			<version>3.24ea1</version>
 		</dependency>
 		<dependency>
-			<groupId>org.elasticsearch</groupId>
-			<artifactId>elasticsearch</artifactId>
-			<version>7.16.3</version>
+		    <groupId>co.elastic.clients</groupId>
+		    <artifactId>elasticsearch-java</artifactId>
+		    <version>9.1.0</version>
 		</dependency>
+		
 		<dependency>
-			<groupId>org.elasticsearch</groupId>
-			<artifactId>elasticsearch-core</artifactId>
-			<version>7.16.3</version>
+		    <groupId>org.elasticsearch.client</groupId>
+		    <artifactId>elasticsearch-rest-client</artifactId>
+		    <version>9.1.0</version>
 		</dependency>
-		<dependency>
-			<groupId>org.elasticsearch.client</groupId>
-			<artifactId>elasticsearch-rest-high-level-client</artifactId>
-			<version>7.16.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.elasticsearch.plugin</groupId>
-			<artifactId>rank-eval-client</artifactId>
-			<version>7.16.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.elasticsearch.plugin</groupId>
-			<artifactId>lang-mustache-client</artifactId>
-			<version>7.16.3</version>
-		</dependency>
-
-
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-math3</artifactId>
@@ -142,6 +126,8 @@
                      <Main-Class>org.jax.mgi.snpindexer.Main</Main-Class>
                   </manifestEntries>
                </archive>
+		        <source>11</source>
+		        <target>11</target>               
             </configuration>
          </plugin>
          <plugin>

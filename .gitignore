@@ -2,6 +2,7 @@ logs/
 target/
 build/
 dist/
+bin/
 .settings/
 solr/ConsensusSNPIndex/
 solr/SearchSNPIndex/
