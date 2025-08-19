@@ -14,6 +14,7 @@ public class ConsensusSNPIndexMappings extends Mapping {
 		for (String field : keywordFields) {
 			addKeywordField(field);
 		}
+		addObjectField("objectJSONData", false);
 	}
 
 }

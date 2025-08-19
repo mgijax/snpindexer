@@ -1,14 +1,15 @@
 package org.jax.mgi.snpindexer.util.es;
 
-import co.elastic.clients.elasticsearch._types.mapping.KeywordProperty;
-import co.elastic.clients.elasticsearch._types.mapping.Property;
-import co.elastic.clients.elasticsearch._types.mapping.TextProperty;
-import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
-import co.elastic.clients.elasticsearch._types.mapping.DateProperty;
-
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import co.elastic.clients.elasticsearch._types.mapping.DateProperty;
+import co.elastic.clients.elasticsearch._types.mapping.KeywordProperty;
+import co.elastic.clients.elasticsearch._types.mapping.ObjectProperty;
+import co.elastic.clients.elasticsearch._types.mapping.Property;
+import co.elastic.clients.elasticsearch._types.mapping.TextProperty;
+import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 
 /**
  * Base builder for Elasticsearch mappings, supporting flags for subfields.
@@ -120,6 +121,24 @@ public abstract class Mapping {
 
         resetFlags();
     }
+    
+    /**
+     * Adds a object field to the mapping.
+     *
+     * @param name the name of the object field
+     * @param enabled boolean 
+     */
+    protected void addObjectField(String name, boolean enabled) {
+        ObjectProperty.Builder objectBuilder = new ObjectProperty.Builder();
+        objectBuilder.enabled(enabled);
+
+        Property property = new Property.Builder()
+                .object(objectBuilder.build())
+                .build();
+
+        properties.put(name, property);
+        resetFlags();
+    }    
 
     // Helpers to create Property for subfields
 
