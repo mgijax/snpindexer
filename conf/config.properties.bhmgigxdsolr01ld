@@ -1,0 +1,8 @@
+driver=org.postgresql.Driver
+databaseUrl=jdbc:postgresql://mgi-testdb4.jax.org/pub
+user=mgd_dbo
+password=db0dev
+esUrls=[["bhmgigxdsolr01ld.jax.org:9200"]]
+solrBaseUrl=http://localhost.jax.org:8983/solr
+debug=false
+threaded=false
