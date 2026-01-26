@@ -93,7 +93,7 @@ public enum IndexerConfig {
 	}
 	public Mapping getMappings() {
 		try {
-			Mapping mapping = (Mapping) mappingClazz.getDeclaredConstructor(Boolean.class).newInstance(true);
+			Mapping mapping = (Mapping) mappingClazz.getDeclaredConstructor().newInstance();
 			mapping.buildMapping();
 			return mapping;
 		} catch (Exception e) {
@@ -103,8 +103,7 @@ public enum IndexerConfig {
 	}
 	public Setting getSettings() {
 		try {
-			Setting setting = (Setting) settingClazz.getDeclaredConstructor(Boolean.class).newInstance(true);
-			setting.buildSettings();
+			Setting setting = (Setting) settingClazz.getDeclaredConstructor().newInstance();
 			return setting;
 		} catch (Exception e) {
 			e.printStackTrace();

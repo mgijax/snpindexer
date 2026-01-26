@@ -1,13 +1,9 @@
 package org.jax.mgi.snpindexer.util.es;
 
-import java.io.IOException;
+import co.elastic.clients.elasticsearch.indices.IndexSettings;
 
-public abstract class Setting extends Builder {
-
-	public Setting(Boolean pretty) {
-		super(pretty);
-	}
-
-	public abstract void buildSettings() throws IOException;
+public abstract class Setting {
+	
+	public abstract IndexSettings getSetting();
 
 }
